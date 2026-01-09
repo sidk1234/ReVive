@@ -1,0 +1,40 @@
+{
+  "name": "RecyclingActivity",
+  "type": "object",
+  "properties": {
+    "material_type": {
+      "type": "string",
+      "enum": [
+        "plastic",
+        "paper",
+        "metal",
+        "glass",
+        "electronics",
+        "textiles"
+      ],
+      "description": "Type of material recycled"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Weight in kilograms"
+    },
+    "location": {
+      "type": "string",
+      "description": "Drop-off location name"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the recycling activity"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of recycling activity"
+    }
+  },
+  "required": [
+    "material_type",
+    "weight",
+    "date"
+  ]
+}
