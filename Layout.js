@@ -22,9 +22,10 @@ export default function Layout({ children }) {
           scroll-behavior: smooth;
         }
         
-        body {
+        body, #__next {
           background: var(--color-bg-darker);
           overflow-x: hidden;
+          min-height: 100%;
         }
         
         ::-webkit-scrollbar {

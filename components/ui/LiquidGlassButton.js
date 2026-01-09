@@ -10,7 +10,14 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
-export default function LiquidGlassButton({ children, onClick, className = '', size = 'md' }) {
+export default function LiquidGlassButton({
+  children,
+  onClick,
+  className = '',
+  size = 'md',
+  disabled = false,
+  type = 'button',
+}) {
   const buttonRef = useRef(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
@@ -33,6 +40,8 @@ export default function LiquidGlassButton({ children, onClick, className = '', s
     <motion.button
       ref={buttonRef}
       onClick={onClick}
+      disabled={disabled}
+      type={type}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -42,6 +51,7 @@ export default function LiquidGlassButton({ children, onClick, className = '', s
         transition-all duration-300 ease-out
         ${sizeClasses[size]}
         ${className}
+        ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
       `}
       style={{
         background: isHovering

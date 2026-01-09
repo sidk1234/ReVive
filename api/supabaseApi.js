@@ -17,6 +17,19 @@ import { getUsernameFromEmail } from '@/utils';
 // can assign an object here to simulate a logged-in user if desired.
 let mockUser = null;
 
+const resolveAuthRedirectUrl = () => {
+  const envUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : '');
+  if (envUrl) {
+    return envUrl.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return '';
+};
+
 const syncUserProfileByEmail = async (user) => {
   if (!user?.email) return user;
   try {
@@ -163,25 +176,91 @@ export const supabaseApi = {
       mockUser = null;
     },
     /**
-     * Initiates a login flow. When Supabase is configured this triggers
-     * OAuth login with Google and returns (so Supabase will handle the
-     * redirect). Otherwise it navigates to the fallback login page.
+     * Navigates to the login page so the user can choose an auth method.
      */
     redirectToLogin: () => {
-      if (isSupabaseConfigured) {
-        // Redirect to Google sign-in using Supabase's built-in OAuth flow.
-        // We pass the redirectTo option so that after sign-in the user
-        // returns to the application root.
-        supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: typeof window !== 'undefined' ? window.location.origin + '/' : '/',
-          },
-        });
-      } else if (typeof window !== 'undefined') {
-        // In fallback mode, navigate to the placeholder login page
+      if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
+    },
+    /**
+     * Starts Google OAuth sign-in using Supabase.
+     */
+    signInWithGoogle: () => {
+      if (!isSupabaseConfigured) return;
+      const redirectBase = resolveAuthRedirectUrl();
+      supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectBase ? `${redirectBase}/` : '/',
+        },
+      });
+    },
+    /**
+     * Signs in a user with email and password.
+     * @param {string} email
+     * @param {string} password
+     * @returns {Promise<object|null>}
+     */
+    signInWithEmail: async (email, password) => {
+      if (isSupabaseConfigured) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (error) {
+            return { error };
+          }
+          return { data };
+        } catch (err) {
+          return { error: err };
+        }
+      }
+      mockUser = {
+        id: 'demo-user',
+        username: getUsernameFromEmail(email),
+        full_name: email?.split('@')[0] || 'User',
+        email,
+        total_recycled: 0,
+        role: 'member',
+      };
+      return { data: { user: mockUser } };
+    },
+    /**
+     * Signs up a new user with email and password.
+     * @param {object} payload
+     * @returns {Promise<object|null>}
+     */
+    signUpWithEmail: async ({ email, password, fullName }) => {
+      if (isSupabaseConfigured) {
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName || '',
+              },
+            },
+          });
+          if (error) {
+            return { error };
+          }
+          return { data };
+        } catch (err) {
+          return { error: err };
+        }
+      }
+      mockUser = {
+        id: 'demo-user',
+        username: getUsernameFromEmail(email),
+        full_name: fullName || email?.split('@')[0] || 'User',
+        email,
+        total_recycled: 0,
+        role: 'member',
+      };
+      return { data: { user: mockUser } };
     },
   },
   entities: {
