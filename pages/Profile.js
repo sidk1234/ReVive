@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
+import { supabaseApi } from '@/api/supabaseApi';
+import { createUserProfileUrl, getUsernameFromUser, normalizeUsername } from '@/utils';
 import Navbar from '../components/home/Navbar';
 import Footer from '../components/home/Footer';
 import LiquidGlassButton from '../components/ui/LiquidGlassButton';
@@ -18,7 +19,9 @@ import {
   Save
 } from '@/components/ui/icons';
 
-export default function Profile() {
+export default function Profile({ routeUsername, redirectToUserPage = false }) {
+  const router = useRouter();
+  const shouldRedirectToUserPage = redirectToUserPage || router.pathname === '/Profile';
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,7 +40,23 @@ export default function Profile() {
 
   const loadUserData = async () => {
     try {
-      const userData = await base44.auth.me();
+      const userData = await supabaseApi.auth.me();
+      if (!userData) {
+        window.location.href = '/login';
+        return;
+      }
+      const currentUsername = getUsernameFromUser(userData);
+      const normalizedRoute = normalizeUsername(
+        Array.isArray(routeUsername) ? routeUsername[0] : routeUsername,
+      );
+      if (shouldRedirectToUserPage && currentUsername) {
+        router.replace(createUserProfileUrl(userData));
+        return;
+      }
+      if (normalizedRoute && normalizedRoute !== currentUsername) {
+        router.replace(createUserProfileUrl(userData));
+        return;
+      }
       setUser(userData);
       setFormData({
         full_name: userData.full_name || '',
@@ -58,7 +77,7 @@ export default function Profile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
+      await supabaseApi.auth.updateMe({
         full_name: formData.full_name,
         phone: formData.phone,
         address: formData.address,

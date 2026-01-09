@@ -8,8 +8,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
+import { supabaseApi } from '@/api/supabaseApi';
+import { createPageUrl, createUserImpactUrl, createUserProfileUrl } from '@/utils';
 import Link from 'next/link';
 import Logo from './Logo';
 import LiquidGlassButton from '../ui/LiquidGlassButton';
@@ -44,10 +44,10 @@ export default function Navbar() {
 
   const checkAuth = async () => {
     try {
-      const authenticated = await base44.auth.isAuthenticated();
+      const authenticated = await supabaseApi.auth.isAuthenticated();
       setIsAuthenticated(authenticated);
       if (authenticated) {
-        const userData = await base44.auth.me();
+        const userData = await supabaseApi.auth.me();
         setUser(userData);
       }
     } catch (error) {
@@ -56,7 +56,7 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await supabaseApi.auth.logout();
     // After logout, refresh the auth state
     setIsAuthenticated(false);
     setUser(null);
@@ -156,7 +156,7 @@ export default function Navbar() {
 
                         <div className="p-2">
                           <Link
-                            href={createPageUrl('MyImpact')}
+                            href={createUserImpactUrl(user)}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-white"
                             onClick={() => setProfileMenuOpen(false)}
                           >
@@ -164,7 +164,7 @@ export default function Navbar() {
                             <span className="text-sm">My Impact</span>
                           </Link>
                           <Link
-                            href={createPageUrl('Profile')}
+                            href={createUserProfileUrl(user)}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-white"
                             onClick={() => setProfileMenuOpen(false)}
                           >
@@ -187,7 +187,7 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <LiquidGlassButton size="sm" onClick={() => base44.auth.redirectToLogin()}>
+                <LiquidGlassButton size="sm" onClick={() => supabaseApi.auth.redirectToLogin()}>
                   Join ReVive
                 </LiquidGlassButton>
               )}
@@ -243,7 +243,7 @@ export default function Navbar() {
                     </div>
                   </div>
                   <Link
-                    href={createPageUrl('MyImpact')}
+                    href={createUserImpactUrl(user)}
                     className="block mb-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -253,7 +253,7 @@ export default function Navbar() {
                     </LiquidGlassButton>
                   </Link>
                   <Link
-                    href={createPageUrl('Profile')}
+                    href={createUserProfileUrl(user)}
                     className="block mb-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -274,7 +274,7 @@ export default function Navbar() {
                   </button>
                 </>
               ) : (
-                <LiquidGlassButton size="md" className="w-full" onClick={() => base44.auth.redirectToLogin()}>
+                <LiquidGlassButton size="md" className="w-full" onClick={() => supabaseApi.auth.redirectToLogin()}>
                   Join ReVive
                 </LiquidGlassButton>
               )}

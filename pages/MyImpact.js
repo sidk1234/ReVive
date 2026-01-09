@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi } from '@/api/supabaseApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '../components/home/Navbar';
 import Footer from '../components/home/Footer';
@@ -20,8 +21,11 @@ import {
   Target
 } from '@/components/ui/icons';
 import { format } from 'date-fns';
+import { createUserImpactUrl, getUsernameFromUser, normalizeUsername } from '@/utils';
 
-export default function MyImpact() {
+export default function MyImpact({ routeUsername, redirectToUserPage = false }) {
+  const router = useRouter();
+  const shouldRedirectToUserPage = redirectToUserPage || router.pathname === '/MyImpact';
   const [user, setUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,7 +44,23 @@ export default function MyImpact() {
 
   const loadUser = async () => {
     try {
-      const userData = await base44.auth.me();
+      const userData = await supabaseApi.auth.me();
+      if (!userData) {
+        window.location.href = '/login';
+        return;
+      }
+      const currentUsername = getUsernameFromUser(userData);
+      const normalizedRoute = normalizeUsername(
+        Array.isArray(routeUsername) ? routeUsername[0] : routeUsername,
+      );
+      if (shouldRedirectToUserPage && currentUsername) {
+        router.replace(createUserImpactUrl(userData));
+        return;
+      }
+      if (normalizedRoute && normalizedRoute !== currentUsername) {
+        router.replace(createUserImpactUrl(userData));
+        return;
+      }
       if (!userData.onboarding_completed) {
         // Redirect to the capitalized Onboarding route to match the file name
         window.location.href = '/Onboarding';
@@ -55,18 +75,18 @@ export default function MyImpact() {
 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['activities'],
-    queryFn: () => base44.entities.RecyclingActivity.list('-created_date'),
+    queryFn: () => supabaseApi.entities.RecyclingActivity.list('-created_date'),
     enabled: !!user
   });
 
   const createActivityMutation = useMutation({
-    mutationFn: (data) => base44.entities.RecyclingActivity.create(data),
+    mutationFn: (data) => supabaseApi.entities.RecyclingActivity.create(data),
     onSuccess: async (newActivity) => {
       queryClient.invalidateQueries(['activities']);
       
       // Update user's total
       const newTotal = (user.total_recycled || 0) + parseFloat(newActivity.weight);
-      await base44.auth.updateMe({ total_recycled: newTotal });
+      await supabaseApi.auth.updateMe({ total_recycled: newTotal });
       await loadUser();
       
       setShowAddForm(false);
@@ -81,12 +101,12 @@ export default function MyImpact() {
   });
 
   const deleteActivityMutation = useMutation({
-    mutationFn: (id) => base44.entities.RecyclingActivity.delete(id),
+    mutationFn: (id) => supabaseApi.entities.RecyclingActivity.delete(id),
     onSuccess: async (_, deletedId) => {
       const deletedActivity = activities.find(a => a.id === deletedId);
       if (deletedActivity) {
         const newTotal = Math.max(0, (user.total_recycled || 0) - parseFloat(deletedActivity.weight));
-        await base44.auth.updateMe({ total_recycled: newTotal });
+        await supabaseApi.auth.updateMe({ total_recycled: newTotal });
         await loadUser();
       }
       queryClient.invalidateQueries(['activities']);

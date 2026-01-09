@@ -6,6 +6,7 @@
 // in-memory mock user.
 
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { getUsernameFromEmail } from '@/utils';
 
 // Fallback demo user used when Supabase is not configured or the user is
 // not authenticated. This ensures the app can still render pages and
@@ -16,7 +17,51 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 // can assign an object here to simulate a logged-in user if desired.
 let mockUser = null;
 
-export const base44 = {
+const syncUserProfileByEmail = async (user) => {
+  if (!user?.email) return user;
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select(
+        'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed',
+      )
+      .eq('email', user.email)
+      .single();
+    if (error || !profile) return user;
+
+    const current = user.user_metadata || {};
+    const update = {};
+    const maybeSet = (key, value) => {
+      if (value === null || value === undefined) return;
+      if (typeof value === 'string' && value.trim() === '') return;
+      if (current[key] !== value) {
+        update[key] = value;
+      }
+    };
+
+    maybeSet('full_name', profile.full_name);
+    maybeSet('phone', profile.phone);
+    maybeSet('address', profile.address);
+    maybeSet('bio', profile.bio);
+    maybeSet('organization_name', profile.organization_name);
+    maybeSet('user_type', profile.user_type);
+    maybeSet('total_recycled', profile.total_recycled);
+    maybeSet('onboarding_completed', profile.onboarding_completed);
+
+    if (Object.keys(update).length === 0) return user;
+
+    const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+      data: update,
+    });
+    if (updateError || !updateData?.user) return user;
+    return updateData.user;
+  } catch (err) {
+    console.error('Supabase profile sync error:', err);
+    return user;
+  }
+};
+
+export const supabaseApi = {
   auth: {
     /**
      * Returns whether the current user is authenticated. When Supabase is
@@ -51,18 +96,24 @@ export const base44 = {
           if (error || !user) {
             return null;
           }
+          const syncedUser = await syncUserProfileByEmail(user);
+          const userForProfile = syncedUser || user;
           // Merge the base profile with user_metadata. The metadata may
           // include fields like full_name and onboarding_completed.
           return {
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            email: user.email,
-            phone: user.phone || '',
-            address: user.user_metadata?.address || '',
-            bio: user.user_metadata?.bio || '',
-            organization_name: user.user_metadata?.organization_name || '',
-            user_type: user.user_metadata?.user_type || 'individual',
-            total_recycled: user.user_metadata?.total_recycled || 0,
-            onboarding_completed: Boolean(user.user_metadata?.onboarding_completed),
+            id: userForProfile.id,
+            username: userForProfile.user_metadata?.username || getUsernameFromEmail(userForProfile.email),
+            full_name: userForProfile.user_metadata?.full_name || userForProfile.email?.split('@')[0] || 'User',
+            email: userForProfile.email,
+            phone: userForProfile.phone || userForProfile.user_metadata?.phone || '',
+            address: userForProfile.user_metadata?.address || '',
+            bio: userForProfile.user_metadata?.bio || '',
+            organization_name: userForProfile.user_metadata?.organization_name || '',
+            user_type: userForProfile.user_metadata?.user_type || 'individual',
+            total_recycled: userForProfile.user_metadata?.total_recycled || 0,
+            onboarding_completed: Boolean(userForProfile.user_metadata?.onboarding_completed),
+            created_date: userForProfile.created_at,
+            role: userForProfile.role || 'member',
           };
         } catch {
           return null;

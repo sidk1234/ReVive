@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
+import { supabaseApi } from '@/api/supabaseApi';
+import { createUserImpactUrl } from '@/utils';
 import LiquidGlassButton from '../components/ui/LiquidGlassButton';
 import { User, GraduationCap, Building2, ArrowRight, Loader2 } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
@@ -24,9 +24,9 @@ export default function Onboarding() {
 
   const checkOnboarding = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await supabaseApi.auth.me();
       if (user.onboarding_completed) {
-        window.location.href = createPageUrl('MyImpact');
+        window.location.href = createUserImpactUrl(user);
       }
     } catch (error) {
       window.location.href = '/';
@@ -65,12 +65,13 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await base44.auth.updateMe({
+      await supabaseApi.auth.updateMe({
         ...formData,
         onboarding_completed: true,
         total_recycled: 0
       });
-      window.location.href = createPageUrl('MyImpact');
+      const updatedUser = await supabaseApi.auth.me();
+      window.location.href = createUserImpactUrl(updatedUser);
     } catch (error) {
       console.error('Error completing onboarding:', error);
       alert('Failed to complete onboarding. Please try again.');
@@ -86,10 +87,6 @@ export default function Onboarding() {
         background: 'radial-gradient(ellipse at 50% 0%, rgba(30, 58, 95, 0.3) 0%, rgba(10, 22, 40, 1) 50%, rgba(2, 6, 12, 1) 100%)'
       }}
     >
-      {/* Background decoration */}
-      <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 left-0 w-96 h-96 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 rounded-full blur-3xl" />
-
       <div className="relative max-w-4xl w-full">
         {/* Step 1: Select User Type */}
         {step === 1 && (

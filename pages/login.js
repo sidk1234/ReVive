@@ -1,13 +1,13 @@
 import Layout from "../Layout";
 import LiquidGlassButton from '@/components/ui/LiquidGlassButton';
-import { base44 } from '@/api/base44Client';
+import { supabaseApi } from '@/api/supabaseApi';
 
 /**
  * Login page.
  *
  * When Supabase is configured this page allows a visitor to authenticate via
  * Google single sign‑on. Pressing the button triggers the Supabase OAuth
- * flow through the base44 API client. During development without
+ * flow through the Supabase API client. During development without
  * Supabase, clicking the button will simply redirect to the demo home
  * page. Users who wish to sign up using the official Base44 platform can
  * also follow the link back to the original site.
@@ -22,7 +22,7 @@ export default function LoginPage() {
           you don’t yet have a ReVive account, you’ll be prompted to create
           one after signing in.
         </p>
-        <LiquidGlassButton size="lg" onClick={() => base44.auth.redirectToLogin()}>
+        <LiquidGlassButton size="lg" onClick={() => supabaseApi.auth.redirectToLogin()}>
           Continue with Google
         </LiquidGlassButton>
         <p className="text-white/50 mt-6 text-sm">

@@ -30,3 +30,36 @@ export function createPageUrl(page) {
   const trimmed = page.replace(/^\//, '');
   return `/${trimmed}`;
 }
+
+export function normalizeUsername(value) {
+  if (!value) return '';
+  return value
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function getUsernameFromEmail(email) {
+  if (!email) return '';
+  const localPart = email.split('@')[0] || '';
+  return normalizeUsername(localPart);
+}
+
+export function getUsernameFromUser(user) {
+  if (!user) return '';
+  if (user.username) return normalizeUsername(user.username);
+  return getUsernameFromEmail(user.email);
+}
+
+export function createUserProfileUrl(user) {
+  const username = getUsernameFromUser(user);
+  if (!username) return '/Profile';
+  return `/u/${encodeURIComponent(username)}`;
+}
+
+export function createUserImpactUrl(user) {
+  const username = getUsernameFromUser(user);
+  if (!username) return '/MyImpact';
+  return `/u/${encodeURIComponent(username)}/impact`;
+}
