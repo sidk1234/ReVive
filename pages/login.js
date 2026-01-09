@@ -160,6 +160,41 @@ export default function LoginPage() {
                     placeholder={isSignup ? 'Create a password' : 'Enter your password'}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-400 focus:outline-none"
                   />
+                  {!isSignup ? (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-4"
+                        onClick={async () => {
+                          if (!form.email) {
+                            setStatus({
+                              loading: false,
+                              error: 'Enter your email to receive a reset link.',
+                              message: '',
+                            });
+                            return;
+                          }
+                          setStatus({ loading: true, error: '', message: '' });
+                          const result = await supabaseApi.auth.sendPasswordReset(form.email);
+                          if (result?.error) {
+                            setStatus({
+                              loading: false,
+                              error: result.error.message || 'Unable to send reset email.',
+                              message: '',
+                            });
+                            return;
+                          }
+                          setStatus({
+                            loading: false,
+                            error: '',
+                            message: 'Password reset link sent. Check your inbox.',
+                          });
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
 
                 {isSignup ? (

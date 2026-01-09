@@ -197,6 +197,47 @@ export const supabaseApi = {
       });
     },
     /**
+     * Sends a password reset email.
+     * @param {string} email
+     * @returns {Promise<object|null>}
+     */
+    sendPasswordReset: async (email) => {
+      if (!isSupabaseConfigured) {
+        return { error: new Error('Supabase is not configured.') };
+      }
+      try {
+        const redirectBase = resolveAuthRedirectUrl();
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectBase ? `${redirectBase}/reset-password` : undefined,
+        });
+        if (error) {
+          return { error };
+        }
+        return { data };
+      } catch (err) {
+        return { error: err };
+      }
+    },
+    /**
+     * Updates the current user's password.
+     * @param {string} password
+     * @returns {Promise<object|null>}
+     */
+    updatePassword: async (password) => {
+      if (!isSupabaseConfigured) {
+        return { error: new Error('Supabase is not configured.') };
+      }
+      try {
+        const { data, error } = await supabase.auth.updateUser({ password });
+        if (error) {
+          return { error };
+        }
+        return { data };
+      } catch (err) {
+        return { error: err };
+      }
+    },
+    /**
      * Signs in a user with email and password.
      * @param {string} email
      * @param {string} password
