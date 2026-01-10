@@ -23,6 +23,10 @@ export function Select({ className = "", children, ...props }) {
 export const SelectTrigger = Select;
 export const SelectValue = ({ children }) => <>{children}</>;
 export const SelectContent = ({ children }) => <>{children}</>;
-export const SelectItem = ({ value, children }) => <option value={value}>{children}</option>;
+export const SelectItem = ({ value, children }) => (
+  <option value={value} style={{ color: "#0a0a0a", backgroundColor: "#ffffff" }}>
+    {children}
+  </option>
+);
 
 export default Select;
