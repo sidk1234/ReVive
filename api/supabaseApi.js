@@ -30,6 +30,34 @@ const resolveAuthRedirectUrl = () => {
   return '';
 };
 
+const resolveRoleFromAllowlist = (email) => {
+  if (!email) return null;
+  const adminList = process.env.NEXT_PUBLIC_ADMIN_EMAILS || '';
+  const ownerList = process.env.NEXT_PUBLIC_OWNER_EMAILS || '';
+  const normalizedEmail = email.toLowerCase();
+  const ownerMatch = ownerList
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(normalizedEmail);
+  if (ownerMatch) return 'owner';
+  const adminMatch = adminList
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(normalizedEmail);
+  return adminMatch ? 'admin' : null;
+};
+
+const resolveRole = ({ profile, user }) => {
+  const directRole = profile?.role || user?.user_metadata?.role;
+  if (directRole) {
+    return directRole.toString().trim().toLowerCase();
+  }
+  const allowlisted = resolveRoleFromAllowlist(user?.email);
+  return allowlisted || 'member';
+};
+
 const ensureProfile = async (user) => {
   if (!user?.id || !user?.email) return null;
   try {
@@ -54,7 +82,7 @@ const ensureProfile = async (user) => {
       email: user.email,
       full_name: fullName,
       user_type: 'individual',
-      role: 'member',
+      role: resolveRoleFromAllowlist(user.email) || 'member',
       onboarding_completed: false,
       total_recycled: 0,
     };
@@ -213,11 +241,7 @@ export const supabaseApi = {
             onboarding_completed:
               profile?.onboarding_completed ?? Boolean(userForProfile.user_metadata?.onboarding_completed),
             created_date: userForProfile.created_at,
-            role:
-              (profile?.role || userForProfile.user_metadata?.role || 'member')
-                .toString()
-                .trim()
-                .toLowerCase(),
+            role: resolveRole({ profile, user: userForProfile }),
           };
         } catch {
           return null;
@@ -393,6 +417,14 @@ export const supabaseApi = {
         role: 'member',
       };
       return { data: { user: mockUser } };
+    },
+    /**
+     * Returns the resolved role for the current user.
+     * @returns {Promise<string|null>}
+     */
+    getRole: async () => {
+      const user = await supabaseApi.auth.me();
+      return user?.role || null;
     },
   },
   entities: {
