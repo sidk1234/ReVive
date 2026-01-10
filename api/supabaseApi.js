@@ -119,7 +119,7 @@ const syncUserProfileByEmail = async (user) => {
   }
 };
 
-const fetchProfileById = async (userId) => {
+const fetchProfileById = async (userId, email) => {
   if (!userId) return null;
   try {
     const { data: profile, error } = await supabase
@@ -129,8 +129,24 @@ const fetchProfileById = async (userId) => {
       )
       .eq('id', userId)
       .single();
-    if (error) return null;
-    return profile || null;
+    if (!error && profile) {
+      return profile;
+    }
+  } catch (err) {
+    console.error('Supabase profile fetch error:', err);
+  }
+
+  if (!email) return null;
+  try {
+    const { data: fallbackProfile, error: fallbackError } = await supabase
+      .from('profiles')
+      .select(
+        'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed, role, email',
+      )
+      .eq('email', email)
+      .single();
+    if (fallbackError) return null;
+    return fallbackProfile || null;
   } catch (err) {
     console.error('Supabase profile fetch error:', err);
     return null;
@@ -174,7 +190,7 @@ export const supabaseApi = {
           }
           await ensureProfile(user);
           await syncUserProfileByEmail(user);
-          const profile = await fetchProfileById(user.id);
+          const profile = await fetchProfileById(user.id, user.email);
           const userForProfile = user;
           // Merge the base profile with user_metadata. The metadata may
           // include fields like full_name and onboarding_completed.
