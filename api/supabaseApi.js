@@ -75,14 +75,14 @@ const ensureProfile = async (user) => {
 };
 
 const syncUserProfileByEmail = async (user) => {
-  if (!user?.email) return user;
+  if (!user?.id) return user;
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(
         'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed, role',
       )
-      .eq('email', user.email)
+      .eq('id', user.id)
       .single();
     if (error || !profile) return user;
 
@@ -116,6 +116,24 @@ const syncUserProfileByEmail = async (user) => {
   } catch (err) {
     console.error('Supabase profile sync error:', err);
     return user;
+  }
+};
+
+const fetchProfileById = async (userId) => {
+  if (!userId) return null;
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select(
+        'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed, role, email',
+      )
+      .eq('id', userId)
+      .single();
+    if (error) return null;
+    return profile || null;
+  } catch (err) {
+    console.error('Supabase profile fetch error:', err);
+    return null;
   }
 };
 
@@ -155,24 +173,31 @@ export const supabaseApi = {
             return null;
           }
           await ensureProfile(user);
-          const syncedUser = await syncUserProfileByEmail(user);
-          const userForProfile = syncedUser || user;
+          await syncUserProfileByEmail(user);
+          const profile = await fetchProfileById(user.id);
+          const userForProfile = user;
           // Merge the base profile with user_metadata. The metadata may
           // include fields like full_name and onboarding_completed.
           return {
             id: userForProfile.id,
             username: userForProfile.user_metadata?.username || getUsernameFromEmail(userForProfile.email),
-            full_name: userForProfile.user_metadata?.full_name || userForProfile.email?.split('@')[0] || 'User',
-            email: userForProfile.email,
-            phone: userForProfile.phone || userForProfile.user_metadata?.phone || '',
-            address: userForProfile.user_metadata?.address || '',
-            bio: userForProfile.user_metadata?.bio || '',
-            organization_name: userForProfile.user_metadata?.organization_name || '',
-            user_type: userForProfile.user_metadata?.user_type || 'individual',
-            total_recycled: userForProfile.user_metadata?.total_recycled || 0,
-            onboarding_completed: Boolean(userForProfile.user_metadata?.onboarding_completed),
+            full_name:
+              profile?.full_name ||
+              userForProfile.user_metadata?.full_name ||
+              userForProfile.email?.split('@')[0] ||
+              'User',
+            email: profile?.email || userForProfile.email,
+            phone: profile?.phone || userForProfile.user_metadata?.phone || '',
+            address: profile?.address || userForProfile.user_metadata?.address || '',
+            bio: profile?.bio || userForProfile.user_metadata?.bio || '',
+            organization_name:
+              profile?.organization_name || userForProfile.user_metadata?.organization_name || '',
+            user_type: profile?.user_type || userForProfile.user_metadata?.user_type || 'individual',
+            total_recycled: profile?.total_recycled || userForProfile.user_metadata?.total_recycled || 0,
+            onboarding_completed:
+              profile?.onboarding_completed ?? Boolean(userForProfile.user_metadata?.onboarding_completed),
             created_date: userForProfile.created_at,
-            role: userForProfile.user_metadata?.role || userForProfile.role || 'member',
+            role: profile?.role || userForProfile.user_metadata?.role || 'member',
           };
         } catch {
           return null;
