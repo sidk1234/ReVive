@@ -182,6 +182,32 @@ const fetchProfileById = async (userId, email) => {
 };
 
 export const supabaseApi = {
+  adminApi: {
+    call: async (action, payload = {}) => {
+      if (!isSupabaseConfigured) return null;
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data?.session?.access_token) {
+          return null;
+        }
+        const response = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ action, ...payload }),
+        });
+        if (!response.ok) {
+          return null;
+        }
+        const result = await response.json();
+        return result?.data ?? null;
+      } catch (err) {
+        return null;
+      }
+    },
+  },
   auth: {
     /**
      * Returns whether the current user is authenticated. When Supabase is
@@ -587,6 +613,9 @@ export const supabaseApi = {
         return mockUser ? [mockUser] : [];
       }
       try {
+        const apiResult = await supabaseApi.adminApi.call('listUsers', { search });
+        if (apiResult) return apiResult;
+
         let query = supabase
           .from('profiles')
           .select('id, email, full_name, phone, address, bio, organization_name, user_type, role, total_recycled');
@@ -607,6 +636,9 @@ export const supabaseApi = {
     updateUserProfile: async (userId, updates) => {
       if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
       try {
+        const apiResult = await supabaseApi.adminApi.call('updateUserProfile', { userId, updates });
+        if (apiResult) return { data: apiResult };
+
         const { data, error } = await supabase
           .from('profiles')
           .update(updates)
@@ -622,6 +654,9 @@ export const supabaseApi = {
     setUserRole: async (userId, role) => {
       if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
       try {
+        const apiResult = await supabaseApi.adminApi.call('setUserRole', { userId, updates: { role } });
+        if (apiResult) return { data: apiResult };
+
         const { data, error } = await supabase
           .from('profiles')
           .update({ role })
@@ -637,6 +672,9 @@ export const supabaseApi = {
     listPendingActivities: async () => {
       if (!isSupabaseConfigured) return [];
       try {
+        const apiResult = await supabaseApi.adminApi.call('listPendingActivities');
+        if (apiResult) return apiResult;
+
         const { data, error } = await supabase
           .from('recycling_activities')
           .select('id, material_type, weight, location, date, notes, status, user_id')
@@ -655,6 +693,9 @@ export const supabaseApi = {
     listUserActivities: async (userId) => {
       if (!isSupabaseConfigured || !userId) return [];
       try {
+        const apiResult = await supabaseApi.adminApi.call('listUserActivities', { userId });
+        if (apiResult) return apiResult;
+
         const { data, error } = await supabase
           .from('recycling_activities')
           .select('id, material_type, weight, location, date, notes, status, user_id')
@@ -673,6 +714,9 @@ export const supabaseApi = {
     updateActivity: async (activityId, updates) => {
       if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
       try {
+        const apiResult = await supabaseApi.adminApi.call('updateActivity', { activityId, updates });
+        if (apiResult) return { data: apiResult };
+
         const { data: current, error: currentError } = await supabase
           .from('recycling_activities')
           .select('id, user_id, weight, status')

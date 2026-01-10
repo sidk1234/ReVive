@@ -31,8 +31,7 @@ export default function Footer() {
             </p>
 
             <div className="mt-8 space-y-3">
-              <a href="#" className="flex items-center gap-3 text-white/50 hover:text-emerald-400 transition-colors">
-                <Mail className="w-4 h-4" />
+              <a href="mailto:reviveearthnonprofit@googlegroups.com" className="flex items-center gap-3 text-white/50 hover:text-emerald-400 transition-colors">\n                <Mail className="w-4 h-4" />
                 <span className="text-sm">reviveearthnonprofit@googlegroups.com</span>
               </a>
               <a href="#" className="flex items-center gap-3 text-white/50 hover:text-emerald-400 transition-colors">
@@ -86,6 +85,7 @@ export default function Footer() {
     </footer>
   );
 }
+
 
 
 
