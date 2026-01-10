@@ -197,7 +197,11 @@ export const supabaseApi = {
             onboarding_completed:
               profile?.onboarding_completed ?? Boolean(userForProfile.user_metadata?.onboarding_completed),
             created_date: userForProfile.created_at,
-            role: profile?.role || userForProfile.user_metadata?.role || 'member',
+            role:
+              (profile?.role || userForProfile.user_metadata?.role || 'member')
+                .toString()
+                .trim()
+                .toLowerCase(),
           };
         } catch {
           return null;
