@@ -33,7 +33,7 @@ export default function Footer() {
             <div className="mt-8 space-y-3">
               <a href="#" className="flex items-center gap-3 text-white/50 hover:text-emerald-400 transition-colors">
                 <Mail className="w-4 h-4" />
-                <span className="text-sm">hello@revive.earth</span>
+                <span className="text-sm">reviveearthnonprofit@googlegroups.com</span>
               </a>
               <a href="#" className="flex items-center gap-3 text-white/50 hover:text-emerald-400 transition-colors">
                 <MapPin className="w-4 h-4" />
@@ -73,12 +73,12 @@ export default function Footer() {
         {/* Bottom section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
           <p className="text-white/40 text-sm">
-            © 2024 ReVive. Building tomorrow's world, today.
+            (c) 2024 ReVive. Building tomorrow's world, today.
           </p>
 
           <div className="flex items-center gap-6">
-            <a href="#" className="text-white/40 hover:text-white text-sm transition-colors">Privacy</a>
-            <a href="#" className="text-white/40 hover:text-white text-sm transition-colors">Terms</a>
+            <a href="/policy" className="text-white/40 hover:text-white text-sm transition-colors">Privacy</a>
+            <a href="/terms" className="text-white/40 hover:text-white text-sm transition-colors">Terms</a>
             <a href="#" className="text-white/40 hover:text-white text-sm transition-colors">Cookies</a>
           </div>
         </div>
@@ -86,3 +86,6 @@ export default function Footer() {
     </footer>
   );
 }
+
+
+

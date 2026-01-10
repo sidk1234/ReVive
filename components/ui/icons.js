@@ -27,6 +27,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Pencil,
   // stats and charts
   TrendingUp,
   Droplets,
@@ -54,7 +55,9 @@ import {
   Navigation,
   Search,
   Clock,
-  Check
+  Check,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 export {
@@ -77,6 +80,7 @@ export {
   Settings,
   LogOut,
   ChevronDown,
+  Pencil,
   // stats
   TrendingUp,
   Droplets,
@@ -105,5 +109,7 @@ export {
   Search,
   Clock,
   // misc
-  Check
+  Check,
+  CheckCircle,
+  XCircle
 };

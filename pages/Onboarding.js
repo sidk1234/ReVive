@@ -121,7 +121,7 @@ export default function Onboarding() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   onClick={() => handleUserTypeSelect(userType.type)}
-                  className="relative backdrop-blur-xl rounded-3xl p-8 border border-white/10 text-left group hover:border-emerald-500/30 transition-all"
+                  className="relative backdrop-blur-xl rounded-3xl p-8 pb-12 border border-white/10 text-left group hover:border-emerald-500/30 transition-all"
                   style={{
                     background: 'linear-gradient(135deg, rgba(30, 58, 95, 0.5) 0%, rgba(10, 22, 40, 0.7) 100%)'
                   }}
@@ -132,7 +132,7 @@ export default function Onboarding() {
                   <h3 className="text-2xl font-bold text-white mb-3">{userType.title}</h3>
                   <p className="text-white/60 leading-relaxed">{userType.description}</p>
 
-                  <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <ArrowRight className="w-6 h-6 text-emerald-400" />
                   </div>
                 </motion.button>
@@ -160,7 +160,7 @@ export default function Onboarding() {
                   onClick={() => setStep(1)}
                   className="text-emerald-400 hover:text-emerald-300 text-sm mb-4"
                 >
-                  ← Back
+                  <- Back
                 </button>
                 <h2 className="text-3xl font-bold text-white mb-2">Tell us more</h2>
                 <p className="text-white/60">Help us personalize your experience</p>
@@ -245,3 +245,4 @@ export default function Onboarding() {
     </div>
   );
 }
+

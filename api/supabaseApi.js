@@ -30,13 +30,57 @@ const resolveAuthRedirectUrl = () => {
   return '';
 };
 
+const ensureProfile = async (user) => {
+  if (!user?.id || !user?.email) return null;
+  try {
+    const { data: existing, error: existingError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('id', user.id)
+      .single();
+    if (existing && !existingError) return existing;
+  } catch (err) {
+    // Continue to attempt creation when select fails.
+  }
+
+  try {
+    const fullName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split('@')[0] ||
+      'User';
+    const insertData = {
+      id: user.id,
+      email: user.email,
+      full_name: fullName,
+      user_type: 'individual',
+      role: 'member',
+      onboarding_completed: false,
+      total_recycled: 0,
+    };
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(insertData, { onConflict: 'id' })
+      .select('id, email')
+      .single();
+    if (error) {
+      console.error('Supabase profile create error:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('Supabase profile create exception:', err);
+    return null;
+  }
+};
+
 const syncUserProfileByEmail = async (user) => {
   if (!user?.email) return user;
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(
-        'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed',
+        'full_name, phone, address, bio, organization_name, user_type, total_recycled, onboarding_completed, role',
       )
       .eq('email', user.email)
       .single();
@@ -60,6 +104,7 @@ const syncUserProfileByEmail = async (user) => {
     maybeSet('user_type', profile.user_type);
     maybeSet('total_recycled', profile.total_recycled);
     maybeSet('onboarding_completed', profile.onboarding_completed);
+    maybeSet('role', profile.role);
 
     if (Object.keys(update).length === 0) return user;
 
@@ -109,6 +154,7 @@ export const supabaseApi = {
           if (error || !user) {
             return null;
           }
+          await ensureProfile(user);
           const syncedUser = await syncUserProfileByEmail(user);
           const userForProfile = syncedUser || user;
           // Merge the base profile with user_metadata. The metadata may
@@ -126,7 +172,7 @@ export const supabaseApi = {
             total_recycled: userForProfile.user_metadata?.total_recycled || 0,
             onboarding_completed: Boolean(userForProfile.user_metadata?.onboarding_completed),
             created_date: userForProfile.created_at,
-            role: userForProfile.role || 'member',
+            role: userForProfile.user_metadata?.role || userForProfile.role || 'member',
           };
         } catch {
           return null;
@@ -314,21 +360,25 @@ export const supabaseApi = {
        * @param {string} sort - Sort order (ignored in demo)
        * @returns {Promise<object[]>}
        */
-      list: async (sort) => {
+      list: async (sort, options = {}) => {
         if (isSupabaseConfigured) {
           try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return [];
+            if (!user && !options.userId) return [];
             const { data, error } = await supabase
               .from('recycling_activities')
-              .select('id, material_type, weight, location, date, notes')
-              .eq('user_id', user.id)
+              .select('id, material_type, weight, location, date, notes, status, user_id')
+              .eq('user_id', options.userId || user.id)
               .order('date', { ascending: false });
             if (error) {
               console.error('Supabase list error:', error);
               return [];
             }
-            return data || [];
+            let results = data || [];
+            if (options.status) {
+              results = results.filter((item) => item.status === options.status);
+            }
+            return results;
           } catch (err) {
             console.error('Supabase list exception:', err);
             return [];
@@ -344,6 +394,8 @@ export const supabaseApi = {
             location: 'McKinney',
             date: '2024-01-10',
             notes: 'Bottles and containers',
+            status: 'approved',
+            user_id: mockUser?.id || 'demo-user',
           },
           {
             id: '2',
@@ -352,6 +404,8 @@ export const supabaseApi = {
             location: 'Dallas',
             date: '2024-02-15',
             notes: 'Cans',
+            status: 'approved',
+            user_id: mockUser?.id || 'demo-user',
           },
         ];
       },
@@ -375,16 +429,14 @@ export const supabaseApi = {
               location: data.location,
               date: data.date,
               notes: data.notes,
+              status: 'pending',
             };
             const { data: result, error } = await supabase
               .from('recycling_activities')
               .insert(insertData)
-              .select('id, material_type, weight, location, date, notes')
+              .select('id, material_type, weight, location, date, notes, status, user_id')
               .single();
             if (error) throw error;
-            // Also update the user's total_recycled in user metadata
-            const newTotal = (user.user_metadata?.total_recycled || 0) + parseFloat(data.weight || 0);
-            await supabase.auth.updateUser({ data: { total_recycled: newTotal } });
             return result;
           } catch (err) {
             console.error('Supabase create error:', err);
@@ -392,7 +444,7 @@ export const supabaseApi = {
           }
         }
         // Fallback: update the mock user
-        const newActivity = { id: Date.now().toString(), ...data };
+        const newActivity = { id: Date.now().toString(), status: 'approved', user_id: mockUser?.id || 'demo-user', ...data };
         if (mockUser) {
           mockUser.total_recycled =
             (mockUser.total_recycled || 0) + parseFloat(data.weight || 0);
@@ -413,7 +465,7 @@ export const supabaseApi = {
             // Fetch the activity to subtract its weight from the total
             const { data: activity, error: fetchError } = await supabase
               .from('recycling_activities')
-              .select('id, weight')
+              .select('id, weight, status')
               .eq('id', id)
               .eq('user_id', user.id)
               .single();
@@ -424,15 +476,158 @@ export const supabaseApi = {
               .eq('id', id)
               .eq('user_id', user.id);
             if (deleteError) throw deleteError;
-            // Update user's total_recycled
-            const newTotal = Math.max(0, (user.user_metadata?.total_recycled || 0) - parseFloat(activity.weight || 0));
-            await supabase.auth.updateUser({ data: { total_recycled: newTotal } });
+            // Update user's total_recycled for approved activities only
+            if (activity?.status === 'approved') {
+              const newTotal = Math.max(0, (user.user_metadata?.total_recycled || 0) - parseFloat(activity.weight || 0));
+              await supabase.auth.updateUser({ data: { total_recycled: newTotal } });
+            }
           } catch (err) {
             console.error('Supabase delete error:', err);
           }
         }
         // In fallback mode we don't actually persist activities
       },
+    },
+  },
+  admin: {
+    listUsers: async (search = '') => {
+      if (!isSupabaseConfigured) {
+        return mockUser ? [mockUser] : [];
+      }
+      try {
+        let query = supabase
+          .from('profiles')
+          .select('id, email, full_name, phone, address, bio, organization_name, user_type, role, total_recycled');
+        if (search) {
+          query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+        }
+        const { data, error } = await query.order('full_name', { ascending: true });
+        if (error) {
+          console.error('Supabase listUsers error:', error);
+          return [];
+        }
+        return data || [];
+      } catch (err) {
+        console.error('Supabase listUsers exception:', err);
+        return [];
+      }
+    },
+    updateUserProfile: async (userId, updates) => {
+      if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId)
+          .select('id, email, full_name, phone, address, bio, organization_name, user_type, role, total_recycled')
+          .single();
+        if (error) return { error };
+        return { data };
+      } catch (err) {
+        return { error: err };
+      }
+    },
+    setUserRole: async (userId, role) => {
+      if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ role })
+          .eq('id', userId)
+          .select('id, role')
+          .single();
+        if (error) return { error };
+        return { data };
+      } catch (err) {
+        return { error: err };
+      }
+    },
+    listPendingActivities: async () => {
+      if (!isSupabaseConfigured) return [];
+      try {
+        const { data, error } = await supabase
+          .from('recycling_activities')
+          .select('id, material_type, weight, location, date, notes, status, user_id')
+          .eq('status', 'pending')
+          .order('date', { ascending: false });
+        if (error) {
+          console.error('Supabase listPendingActivities error:', error);
+          return [];
+        }
+        return data || [];
+      } catch (err) {
+        console.error('Supabase listPendingActivities exception:', err);
+        return [];
+      }
+    },
+    listUserActivities: async (userId) => {
+      if (!isSupabaseConfigured || !userId) return [];
+      try {
+        const { data, error } = await supabase
+          .from('recycling_activities')
+          .select('id, material_type, weight, location, date, notes, status, user_id')
+          .eq('user_id', userId)
+          .order('date', { ascending: false });
+        if (error) {
+          console.error('Supabase listUserActivities error:', error);
+          return [];
+        }
+        return data || [];
+      } catch (err) {
+        console.error('Supabase listUserActivities exception:', err);
+        return [];
+      }
+    },
+    updateActivity: async (activityId, updates) => {
+      if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') };
+      try {
+        const { data: current, error: currentError } = await supabase
+          .from('recycling_activities')
+          .select('id, user_id, weight, status')
+          .eq('id', activityId)
+          .single();
+        if (currentError || !current) return { error: currentError || new Error('Activity not found') };
+
+        const { data, error } = await supabase
+          .from('recycling_activities')
+          .update(updates)
+          .eq('id', activityId)
+          .select('id, material_type, weight, location, date, notes, status, user_id')
+          .single();
+        if (error) return { error };
+
+        const previousStatus = current.status;
+        const nextStatus = updates.status || current.status;
+        const previousWeight = parseFloat(current.weight || 0);
+        const nextWeight = parseFloat(data.weight || previousWeight);
+        let delta = 0;
+
+        if (previousStatus === 'approved' && nextStatus === 'approved') {
+          delta = nextWeight - previousWeight;
+        } else if (previousStatus !== 'approved' && nextStatus === 'approved') {
+          delta = nextWeight;
+        } else if (previousStatus === 'approved' && nextStatus !== 'approved') {
+          delta = -previousWeight;
+        }
+
+        if (delta !== 0) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, total_recycled')
+            .eq('id', current.user_id)
+            .single();
+          if (profile) {
+            await supabase
+              .from('profiles')
+              .update({ total_recycled: Math.max(0, (profile.total_recycled || 0) + delta) })
+              .eq('id', current.user_id);
+          }
+        }
+
+        return { data };
+      } catch (err) {
+        return { error: err };
+      }
     },
   },
 };

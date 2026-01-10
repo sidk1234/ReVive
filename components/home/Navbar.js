@@ -29,6 +29,7 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const isAdminUser = user?.role === 'admin' || user?.role === 'owner';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -163,6 +164,16 @@ export default function Navbar() {
                             <LayoutDashboard className="w-4 h-4" />
                             <span className="text-sm">My Impact</span>
                           </Link>
+                          {isAdminUser ? (
+                            <Link
+                              href={createPageUrl('admin')}
+                              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-purple-300"
+                              onClick={() => setProfileMenuOpen(false)}
+                            >
+                              <Settings className="w-4 h-4" />
+                              <span className="text-sm">Admin Portal</span>
+                            </Link>
+                          ) : null}
                           <Link
                             href={createUserProfileUrl(user)}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-white"
@@ -242,6 +253,18 @@ export default function Navbar() {
                       {(user.total_recycled || 0).toFixed(1)} kg recycled
                     </div>
                   </div>
+                  {isAdminUser ? (
+                    <Link
+                      href={createPageUrl('admin')}
+                      className="block mb-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LiquidGlassButton size="md" className="w-full">
+                        <Settings className="w-4 h-4" />
+                        Admin Portal
+                      </LiquidGlassButton>
+                    </Link>
+                  ) : null}
                   <Link
                     href={createUserImpactUrl(user)}
                     className="block mb-2"
@@ -285,3 +308,4 @@ export default function Navbar() {
     </>
   );
 }
+

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Layout from '../Layout';
 import LiquidGlassButton from '@/components/ui/LiquidGlassButton';
 import { supabaseApi } from '@/api/supabaseApi';
+import { createPageUrl } from '@/utils';
 
 const initialForm = {
   fullName: '',
@@ -27,6 +28,22 @@ export default function LoginPage() {
 
   const updateField = (key) => (event) => {
     setForm((prev) => ({ ...prev, [key]: event.target.value }));
+  };
+
+  const passwordMatchState = useMemo(() => {
+    if (!isSignup || !form.confirmPassword) {
+      return 'idle';
+    }
+    return form.password === form.confirmPassword ? 'match' : 'mismatch';
+  }, [form.confirmPassword, form.password, isSignup]);
+
+  const routeAfterAuth = async () => {
+    const user = await supabaseApi.auth.me();
+    if (user && !user.onboarding_completed) {
+      window.location.href = createPageUrl('Onboarding');
+      return;
+    }
+    window.location.href = '/';
   };
 
   const handleSubmit = async (event) => {
@@ -67,7 +84,7 @@ export default function LoginPage() {
     }
 
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      await routeAfterAuth();
     }
   };
 
@@ -205,7 +222,13 @@ export default function LoginPage() {
                       value={form.confirmPassword}
                       onChange={updateField('confirmPassword')}
                       placeholder="Re-enter your password"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-400 focus:outline-none"
+                      className={`w-full rounded-xl border bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none transition-colors ${
+                        passwordMatchState === 'mismatch'
+                          ? 'border-rose-400 focus:border-rose-400'
+                          : passwordMatchState === 'match'
+                            ? 'border-emerald-400 focus:border-emerald-400'
+                            : 'border-white/10 focus:border-emerald-400'
+                      }`}
                     />
                   </div>
                 ) : null}

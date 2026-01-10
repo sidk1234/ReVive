@@ -28,6 +28,7 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
   const shouldRedirectToUserPage = redirectToUserPage || router.pathname === '/MyImpact';
   const [user, setUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [submissionMessage, setSubmissionMessage] = useState('');
   const [formData, setFormData] = useState({
     material_type: 'plastic',
     weight: '',
@@ -83,12 +84,15 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
     mutationFn: (data) => supabaseApi.entities.RecyclingActivity.create(data),
     onSuccess: async (newActivity) => {
       queryClient.invalidateQueries(['activities']);
-      
-      // Update user's total
-      const newTotal = (user.total_recycled || 0) + parseFloat(newActivity.weight);
-      await supabaseApi.auth.updateMe({ total_recycled: newTotal });
-      await loadUser();
-      
+
+      if (newActivity?.status === 'approved') {
+        const newTotal = (user.total_recycled || 0) + parseFloat(newActivity.weight);
+        await supabaseApi.auth.updateMe({ total_recycled: newTotal });
+        await loadUser();
+      } else {
+        setSubmissionMessage('Submitted! Please wait for approval.');
+      }
+
       setShowAddForm(false);
       setFormData({
         material_type: 'plastic',
@@ -330,6 +334,12 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
                   </LiquidGlassButton>
                 </div>
 
+                {submissionMessage ? (
+                  <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    {submissionMessage}
+                  </div>
+                ) : null}
+
                 {showAddForm && (
                   <motion.form
                     initial={{ opacity: 0, height: 0 }}
@@ -457,22 +467,37 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
                                     {activity.location}
                                   </span>
                                 )}
+                                {activity.status ? (
+                                  <span
+                                    className={`text-xs uppercase tracking-wide ${
+                                      activity.status === 'approved'
+                                        ? 'text-emerald-300'
+                                        : activity.status === 'rejected'
+                                          ? 'text-rose-300'
+                                          : 'text-yellow-300'
+                                    }`}
+                                  >
+                                    {activity.status}
+                                  </span>
+                                ) : null}
                               </div>
                             </div>
                             <div className="text-right">
                               <div className="text-xl font-bold text-white">{activity.weight} kg</div>
                             </div>
                           </div>
-                          <button
-                            onClick={() => {
-                              if (confirm('Delete this activity?')) {
-                                deleteActivityMutation.mutate(activity.id);
-                              }
-                            }}
-                            className="ml-4 p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {activity.status !== 'pending' ? (
+                            <button
+                              onClick={() => {
+                                if (confirm('Delete this activity?')) {
+                                  deleteActivityMutation.mutate(activity.id);
+                                }
+                              }}
+                              className="ml-4 p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : null}
                         </div>
                       );
                     })
