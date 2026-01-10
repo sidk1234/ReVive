@@ -160,7 +160,7 @@ export default function Onboarding() {
                   onClick={() => setStep(1)}
                   className="text-emerald-400 hover:text-emerald-300 text-sm mb-4"
                 >
-                  <- Back
+                  &larr; Back
                 </button>
                 <h2 className="text-3xl font-bold text-white mb-2">Tell us more</h2>
                 <p className="text-white/60">Help us personalize your experience</p>
