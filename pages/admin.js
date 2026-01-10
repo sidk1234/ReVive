@@ -43,7 +43,12 @@ export default function Admin() {
     load();
   }, []);
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isError: usersError,
+    error: usersErrorDetails,
+  } = useQuery({
     queryKey: ['admin-users', search],
     queryFn: () => supabaseApi.admin.listUsers(search),
     enabled: !!currentUser,
@@ -190,6 +195,10 @@ export default function Admin() {
                 <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
                   {usersLoading ? (
                     <div className="text-white/50">Loading users...</div>
+                  ) : usersError ? (
+                    <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                      Unable to load users. {usersErrorDetails?.message || 'Unknown error.'}
+                    </div>
                   ) : users.length === 0 ? (
                     <div className="text-white/50">No users found.</div>
                   ) : (

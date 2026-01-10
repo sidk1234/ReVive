@@ -1,8 +1,13 @@
 import React from 'react';
+import Head from 'next/head';
 
 export default function Layout({ children }) {
   return (
     <div className="min-h-screen">
+      <Head>
+        <link rel="icon" href="/favicon.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
