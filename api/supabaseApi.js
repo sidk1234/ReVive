@@ -50,7 +50,7 @@ const resolveRoleFromAllowlist = (email) => {
 };
 
 const resolveRole = ({ profile, user }) => {
-  const directRole = profile?.role || user?.user_metadata?.role;
+  const directRole = profile?.role || user?.user_metadata?.role || user?.app_metadata?.role;
   if (directRole) {
     return directRole.toString().trim().toLowerCase();
   }
@@ -212,7 +212,22 @@ export const supabaseApi = {
     me: async () => {
       if (isSupabaseConfigured) {
         try {
-          const { data: { user }, error } = await supabase.auth.getUser();
+          let user = null;
+          let error = null;
+          try {
+            const refreshResult = await supabase.auth.refreshSession();
+            if (refreshResult?.data?.user) {
+              user = refreshResult.data.user;
+            }
+          } catch (refreshError) {
+            // Ignore refresh errors and fall back to getUser.
+          }
+
+          if (!user) {
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            user = userData?.user || null;
+            error = userError;
+          }
           if (error || !user) {
             return null;
           }
