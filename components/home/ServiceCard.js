@@ -15,7 +15,7 @@ const icons = {
   organizations: Building2
 };
 
-export default function ServiceCard({ type, title, description, buttonText, index = 0 }) {
+export default function ServiceCard({ type, title, description, buttonText, href = '/login', index = 0 }) {
   const cardRef = useRef(null);
   const isInView = useInView(cardRef, { once: true, margin: '-100px' });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -83,7 +83,11 @@ export default function ServiceCard({ type, title, description, buttonText, inde
         <p className="text-white/60 leading-relaxed mb-8 text-sm md:text-base">{description}</p>
 
         {/* Button */}
-        <LiquidGlassButton size="md">{buttonText}</LiquidGlassButton>
+        <a href={href}>
+          <LiquidGlassButton size="md" className="w-full">
+            {buttonText}
+          </LiquidGlassButton>
+        </a>
 
         {/* Corner accent */}
         <div className="absolute -bottom-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 blur-2xl group-hover:scale-150 transition-transform duration-700" />

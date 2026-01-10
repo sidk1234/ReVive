@@ -469,6 +469,31 @@ export const supabaseApi = {
     },
   },
   entities: {
+    DropoffLocation: {
+      list: async () => {
+        if (isSupabaseConfigured) {
+          try {
+            const { data, error } = await supabase
+              .from('dropoff_locations')
+              .select('id, name, address')
+              .order('name', { ascending: true });
+            if (error) {
+              console.error('Supabase dropoff list error:', error);
+              return [];
+            }
+            return data || [];
+          } catch (err) {
+            console.error('Supabase dropoff list exception:', err);
+            return [];
+          }
+        }
+        return [
+          { id: '1', name: 'ReVive Central Hub', address: '123 Green Street, San Francisco, CA' },
+          { id: '2', name: 'Downtown Collection Point', address: '456 Eco Avenue, New York, NY' },
+          { id: '3', name: 'East Side Recycling Center', address: '789 Sustainability Blvd, Austin, TX' },
+        ];
+      },
+    },
     RecyclingActivity: {
       /**
        * Returns a list of recycling activities for the current user. When
@@ -678,6 +703,9 @@ export const supabaseApi = {
       if (!isSupabaseConfigured) return [];
       try {
         const apiResult = await supabaseApi.adminApi.call('listPendingActivities');
+        if (apiResult?.error) {
+          throw new Error(apiResult.error);
+        }
         if (apiResult?.data) return apiResult.data;
 
         const { data, error } = await supabase
@@ -699,6 +727,9 @@ export const supabaseApi = {
       if (!isSupabaseConfigured || !userId) return [];
       try {
         const apiResult = await supabaseApi.adminApi.call('listUserActivities', { userId });
+        if (apiResult?.error) {
+          throw new Error(apiResult.error);
+        }
         if (apiResult?.data) return apiResult.data;
 
         const { data, error } = await supabase

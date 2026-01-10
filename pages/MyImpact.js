@@ -80,6 +80,12 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
     enabled: !!user
   });
 
+  const { data: dropoffLocations = [] } = useQuery({
+    queryKey: ['dropoff-locations'],
+    queryFn: () => supabaseApi.entities.DropoffLocation.list(),
+    enabled: !!user
+  });
+
   const createActivityMutation = useMutation({
     mutationFn: (data) => supabaseApi.entities.RecyclingActivity.create(data),
     onSuccess: async (newActivity) => {
@@ -384,12 +390,23 @@ export default function MyImpact({ routeUsername, redirectToUserPage = false }) 
 
                       <div>
                         <label className="block text-sm text-white/60 mb-2">Location</label>
-                        <Input
+                        <Select
                           value={formData.location}
-                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                          placeholder="Drop-off location"
+                          onChange={(event) => setFormData({ ...formData, location: event.target.value })}
                           className="backdrop-blur-xl border-white/10 bg-white/5 text-white"
-                        />
+                        >
+                          <SelectItem value="">Select a drop-off location</SelectItem>
+                          {dropoffLocations.map((location) => {
+                            const label = location.address
+                              ? `${location.name} - ${location.address}`
+                              : location.name;
+                            return (
+                              <SelectItem key={location.id} value={label}>
+                                {label}
+                              </SelectItem>
+                            );
+                          })}
+                        </Select>
                       </div>
 
                       <div>

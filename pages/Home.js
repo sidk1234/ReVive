@@ -20,19 +20,22 @@ export default function Home() {
       type: 'individuals',
       title: 'Individuals',
       description: 'Set up your personal ReVive ID. Track every kilogram you drop off and watch your personal counter grow alongside Earth\'s. Great for households and roommates.',
-      buttonText: 'Create ID'
+      buttonText: 'Create ID',
+      href: '/login'
     },
     {
       type: 'schools',
       title: 'Schools',
       description: 'Launch a campus ReVive hub. Turn recycling into a living science project. Run competitions between classes and stream your live counter in the hallway.',
-      buttonText: 'Start a hub'
+      buttonText: 'Start a hub',
+      href: '/login'
     },
     {
       type: 'organizations',
       title: 'Organizations',
       description: 'Partner as a ReVive node. Plug your business into our logistics map, host a collection point, and showcase certified impact to your team and customers.',
-      buttonText: 'Partner with ReVive'
+      buttonText: 'Partner with ReVive',
+      href: '/login'
     }
   ];
 
@@ -117,12 +120,16 @@ export default function Home() {
             transition={{ duration: 0.7, delay: 0.4 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12"
           >
-            <LiquidGlassButton size="lg">
-              Start Recycling
-            </LiquidGlassButton>
-            <LiquidGlassButton size="lg" className="!bg-transparent">
-              Find a Location
-            </LiquidGlassButton>
+            <a href="/login">
+              <LiquidGlassButton size="lg">
+                Start Recycling
+              </LiquidGlassButton>
+            </a>
+            <a href="/Locations">
+              <LiquidGlassButton size="lg" className="!bg-transparent">
+                Find a Location
+              </LiquidGlassButton>
+            </a>
           </motion.div>
         </div>
 
@@ -243,9 +250,11 @@ export default function Home() {
                 Every piece of waste diverted from landfills is a victory for our planet. 
                 Start your journey with ReVive today.
               </p>
-              <LiquidGlassButton size="lg">
-                Join the Movement
-              </LiquidGlassButton>
+              <a href="/login">
+                <LiquidGlassButton size="lg">
+                  Join the Movement
+                </LiquidGlassButton>
+              </a>
             </div>
           </div>
         </motion.div>

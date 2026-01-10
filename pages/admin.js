@@ -54,7 +54,11 @@ export default function Admin() {
     enabled: !!currentUser,
   });
 
-  const { data: pendingActivities = [] } = useQuery({
+  const {
+    data: pendingActivities = [],
+    isError: pendingError,
+    error: pendingErrorDetails,
+  } = useQuery({
     queryKey: ['admin-pending-activities'],
     queryFn: () => supabaseApi.admin.listPendingActivities(),
     enabled: !!currentUser,
@@ -197,10 +201,14 @@ export default function Admin() {
                     <div className="text-white/50">Loading users...</div>
                   ) : usersError ? (
                     <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                      Unable to load users. {usersErrorDetails?.message || 'Unknown error.'}
+                      Unable to load users. {usersErrorDetails?.message || 'Unknown error.'} Code:
+                      USERS_QUERY_FAILED
                     </div>
                   ) : users.length === 0 ? (
-                    <div className="text-white/50">No users found.</div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                      No users found. Code: USERS_EMPTY. If you expect users, confirm the admin API
+                      is configured and RLS allows admin access.
+                    </div>
                   ) : (
                     users.map((user) => (
                       <button
@@ -241,8 +249,15 @@ export default function Admin() {
               >
                 <h2 className="text-xl font-semibold text-white mb-4">Inbox</h2>
                 <div className="space-y-4 max-h-[340px] overflow-y-auto pr-2">
-                  {pendingActivities.length === 0 ? (
-                    <div className="text-white/50">No pending submissions.</div>
+                  {pendingError ? (
+                    <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                      Unable to load inbox. {pendingErrorDetails?.message || 'Unknown error.'} Code:
+                      INBOX_QUERY_FAILED
+                    </div>
+                  ) : pendingActivities.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                      No pending submissions. Code: INBOX_EMPTY.
+                    </div>
                   ) : (
                     pendingActivities.map((activity) => {
                       const owner = usersById.get(activity.user_id);
