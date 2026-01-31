@@ -9,3 +9,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .vercel
+
+# Kitchen sink
+/kitchen-sink/node_modules
+/public/kitchensink-app

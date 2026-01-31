@@ -2,7 +2,9 @@
 module.exports = {
   content: [
     "./pages/**/*.{js,jsx}",
-    "./components/**/*.{js,jsx}"
+    "./components/**/*.{js,jsx}",
+    // Explicitly exclude kitchen-sink to avoid conflicts
+    "!./kitchen-sink/**",
   ],
   theme: {
     extend: {
