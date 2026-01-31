@@ -1,6 +1,8 @@
 import "../styles/globals.css";
+import "framework7-icons/css/framework7-icons.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Head from "next/head";
+import { App as KonstaApp } from "konsta/react";
 
 const queryClient = new QueryClient();
 
@@ -15,7 +17,9 @@ export default function App({ Component, pageProps }) {
       </Head>
 
       <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
+        <KonstaApp theme="ios">
+          <Component {...pageProps} />
+        </KonstaApp>
       </QueryClientProvider>
     </>
   );
