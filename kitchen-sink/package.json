@@ -4,9 +4,9 @@
   "description": "Konsta UI Kitchen Sink for ReVive",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx vite",
     "build": "npx vite build",
-    "preview": "vite preview"
+    "preview": "npx vite preview"
   },
   "dependencies": {
     "framework7-icons": "^5.0.5",
