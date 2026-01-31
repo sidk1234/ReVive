@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build:kitchensink && next build",
     "start": "next start",
     "build:kitchensink": "cd kitchen-sink && npm install && npm run build",
     "setup": "npm install && npm run build:kitchensink",
