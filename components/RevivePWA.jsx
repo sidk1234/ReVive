@@ -13,7 +13,10 @@ import { KonstaProvider } from 'konsta/react';
 // Import global styles. Framework7 includes safe area handling and page
 // transitions, while Konsta provides the native look and feel.
 import 'framework7/css/bundle';
-import 'konsta/css';
+// Import Konsta theme styles. The generic `konsta/css` path is not exported in
+// Konsta v5; instead import the theme stylesheet from the React build. See
+// https://konstaui.com/react/installation for details.
+import 'konsta/react/theme.css';
 
 // Import routes for the PWA. These map paths to page components.
 import routes from '../pwa/routes.js';
