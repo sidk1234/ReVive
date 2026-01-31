@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "npx vite",
-    "build": "npx vite build",
+    "build": "npx vite build --emptyOutDir",
     "preview": "npx vite preview"
   },
   "dependencies": {
+    "vite": "^7.0.6",
     "@vitejs/plugin-react": "^4.7.0",
     "framework7-icons": "^5.0.5",
     "react": "^19.1.1",
@@ -19,7 +20,6 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.11",
-    "tailwindcss": "^4.1.11",
-    "vite": "^7.0.6"
+    "tailwindcss": "^4.1.11"
   }
 }
