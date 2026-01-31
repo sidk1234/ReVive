@@ -21,8 +21,7 @@
     "konsta": "^5.0.0",
     "framework7": "^9.0.0",
     "framework7-react": "^9.0.0",
-    "clsx": "^1.2.1"
-    ,
+    "clsx": "^1.2.1",
     "swiper": "^9.4.1",
     "dom7": "^4.0.4"
   }

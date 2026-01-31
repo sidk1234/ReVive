@@ -93,7 +93,7 @@ export default function RevivePWA() {
       <Framework7App name="ReVive" theme="ios" routes={routes}>
         {/* A single main view holds the page stack. The initial URL is
              relative to the `/app/` base configured by Next.js routing. */}
-        <Framework7View id="main-view" main url="/capture" />
+        <Framework7View id="main-view" main url="/app/capture" />
       </Framework7App>
     </KonstaProvider>
   );
