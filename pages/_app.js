@@ -3,7 +3,10 @@ import '../styles/globals.css';
 // from the Konsta React package (not `konsta/css`), otherwise Next.js
 // cannot resolve the export. This import ensures that Konsta components
 // render with the correct iOS/Material appearance.
-import 'konsta/react/theme.css';
+// Import Konsta's CSS from the generic entrypoint. Using `konsta/css`
+// ensures compatibility with Konsta v3 and avoids importing files
+// that are not exported by the package (like `konsta/react/theme.css`).
+import 'konsta/css';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Instantiate a single QueryClient for the entire application. The client
