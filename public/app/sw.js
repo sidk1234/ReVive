@@ -1,5 +1,5 @@
 /*
- * Simple service worker for Rec AI PWA.
+ * Simple service worker for ReVive PWA.
  *
  * This service worker precaches the application shell and uses
  * a network-first strategy for runtime requests. If the network is

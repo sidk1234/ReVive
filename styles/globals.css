@@ -9,6 +9,12 @@
  */
 @import 'konsta/react/theme.css';
 
+/* Import Framework7 Icons CSS. The F7 icon components from
+ * `framework7-icons/react` rely on this stylesheet for their
+ * font definitions. Without this import the icons may not render
+ * correctly and will appear as missing glyphs. */
+@import 'framework7-icons/css/framework7-icons.css';
+
 /* Reset default margins */
 html, body {
   margin: 0;

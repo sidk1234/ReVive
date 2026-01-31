@@ -4,7 +4,13 @@ import {
   Tabbar,
   TabbarLink,
   Navbar,
-  Icon
+  Icon,
+  // Konsta v5 requires wrapping the app in KonstaProvider to apply
+  // global theme variables and safe area styles. Without this
+  // provider the components render without styles, leading to the
+  // “unstyled” appearance reported by the user. See the Konsta UI
+  // Next.js integration docs for details.
+  KonstaProvider,
 } from 'konsta/react';
 import {
   Home as IconHome,
@@ -77,46 +83,51 @@ export default function RevivePWA() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Top navbar with large title and back button if needed */}
-      <Navbar title="ReVive" large transparent />
-      {/* Render the current page */}
-      <div className="flex-1 overflow-y-auto">
-        <PageComponent />
+    // Wrap the entire PWA in KonstaProvider to enable theming and
+    // safe-area-aware styles. This provider should be used at the
+    // highest level of any Konsta UI app.
+    <KonstaProvider theme="ios" safeAreas>
+      <div className="flex flex-col h-full">
+        {/* Top navbar with large title and back button if needed */}
+        <Navbar title="ReVive" large transparent />
+        {/* Render the current page */}
+        <div className="flex-1 overflow-y-auto">
+          <PageComponent />
+        </div>
+        {/* Tab bar for navigation */}
+        <Tabbar labels className="safe-area-bottom">
+          <TabbarLink
+            active={currentPage === 'capture'}
+            onClick={() => navigate('capture')}
+            icon={<Icon ios={<IconCamera />} material={<IconCamera />} />}
+            label="Capture"
+          />
+          <TabbarLink
+            active={currentPage === 'impact'}
+            onClick={() => navigate('impact')}
+            icon={<Icon ios={<IconChartBar />} material={<IconChartBar />} />}
+            label="Impact"
+          />
+          <TabbarLink
+            active={currentPage === 'leaderboard'}
+            onClick={() => navigate('leaderboard')}
+            icon={<Icon ios={<IconHome />} material={<IconHome />} />}
+            label="Leaderboard"
+          />
+          <TabbarLink
+            active={currentPage === 'settings'}
+            onClick={() => navigate('settings')}
+            icon={<Icon ios={<IconSettings />} material={<IconSettings />} />}
+            label="Settings"
+          />
+          <TabbarLink
+            active={currentPage === 'account'}
+            onClick={() => navigate('account')}
+            icon={<Icon ios={<IconUser />} material={<IconUser />} />}
+            label="Account"
+          />
+        </Tabbar>
       </div>
-      {/* Tab bar for navigation */}
-      <Tabbar labels className="safe-area-bottom">
-        <TabbarLink
-          active={currentPage === 'capture'}
-          onClick={() => navigate('capture')}
-          icon={<Icon ios={<IconCamera />} material={<IconCamera />} />}
-          label="Capture"
-        />
-        <TabbarLink
-          active={currentPage === 'impact'}
-          onClick={() => navigate('impact')}
-          icon={<Icon ios={<IconChartBar />} material={<IconChartBar />} />}
-          label="Impact"
-        />
-        <TabbarLink
-          active={currentPage === 'leaderboard'}
-          onClick={() => navigate('leaderboard')}
-          icon={<Icon ios={<IconHome />} material={<IconHome />} />}
-          label="Leaderboard"
-        />
-        <TabbarLink
-          active={currentPage === 'settings'}
-          onClick={() => navigate('settings')}
-          icon={<Icon ios={<IconSettings />} material={<IconSettings />} />}
-          label="Settings"
-        />
-        <TabbarLink
-          active={currentPage === 'account'}
-          onClick={() => navigate('account')}
-          icon={<Icon ios={<IconUser />} material={<IconUser />} />}
-          label="Account"
-        />
-      </Tabbar>
-    </div>
+    </KonstaProvider>
   );
 }
