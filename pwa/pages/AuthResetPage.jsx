@@ -1,24 +1,42 @@
-import React from 'react';
-import { Page } from 'framework7-react';
+import React, { useState } from 'react';
+import { Page, Block, BlockTitle, List, ListInput, Button } from 'konsta/react';
 
 /**
- * AuthResetPage displays after the user clicks a password reset link.
- * In a full implementation you would prompt the user to enter a
- * new password and call `supabase.auth.updateUser()` with the
- * provided password. For simplicity we instruct the user to return
- * to the app and reset their password via the login form.
+ * AuthResetPage allows the user to request a password reset. This is a
+ * placeholder; integrate with your Supabase password reset flow in a
+ * real application.
  */
 export default function AuthResetPage() {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+
+  const handleSend = () => {
+    if (!email) return;
+    // In a real app, call supabase.auth.resetPasswordForEmail here
+    setSent(true);
+  };
   return (
     <Page>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-semibold">Password Reset</h1>
-        <p>
-          Your password reset link is valid. Please return to the ReVive app
-          and sign in with your existing email address. You will be prompted
-          to enter a new password.
-        </p>
-      </div>
+      <Block strong inset className="mt-4">
+        <BlockTitle large>Reset Password</BlockTitle>
+        {!sent && (
+          <List strong inset>
+            <ListInput
+              label="Email"
+              type="email"
+              placeholder="Your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Button large className="mt-4" onClick={handleSend}>Send reset link</Button>
+          </List>
+        )}
+        {sent && (
+          <div className="mt-4 text-center">
+            If an account exists for {email}, you will receive an email with reset instructions.
+          </div>
+        )}
+      </Block>
     </Page>
   );
 }

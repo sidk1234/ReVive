@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Import Konsta UI theme styles. Konsta UI version 5 distributes its
+ * theme as a CSS file under `konsta/react/theme.css`. Importing it here
+ * ensures that component variables (colors, sizes, etc.) are available.
+ */
+@import 'konsta/react/theme.css';
+
 /* Reset default margins */
 html, body {
   margin: 0;

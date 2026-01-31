@@ -1,33 +1,25 @@
 import React from 'react';
-import { Page } from 'framework7-react';
-import { Card, CardContent, Button } from 'konsta/react';
+import { Page, Block, BlockTitle, Button } from 'konsta/react';
+import Link from 'next/link';
 
 /**
- * OfflinePage is displayed when the service worker detects that
- * network connectivity is unavailable. Users cannot use ReVive
- * without connectivity because the intelligence and database live
- * on the server. A message and logo are shown with a button to
- * retry once the connection is restored.
+ * OfflinePage is displayed when the PWA detects that the user is offline.
+ * In a real app you would hook this up to your service worker's
+ * offline detection. Here we simply display a friendly message.
  */
 export default function OfflinePage() {
-  function reload() {
-    window.location.reload();
-  }
   return (
     <Page>
-      <div className="flex flex-col items-center justify-center h-full p-4 space-y-4">
-        {/* Use the PWA logo stored under /app/assets so it resolves correctly under Next.js */}
-        <img src="/app/assets/logo.png" alt="ReVive logo" className="w-20 h-20" />
-        <h2 className="text-xl font-semibold">Offline</h2>
-        <p className="text-center">You need to be connected to the internet to use ReVive.</p>
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center space-y-4">
-            <Button large onClick={reload} tonal>
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Block strong inset className="mt-20 text-center">
+        <BlockTitle large>You&apos;re Offline</BlockTitle>
+        <p className="text-gray-500 mb-4">
+          You need to be connected to the internet to use ReVive. Please
+          check your connection and try again.
+        </p>
+        <Link href="/">
+          <Button large>Go Home</Button>
+        </Link>
+      </Block>
     </Page>
   );
 }

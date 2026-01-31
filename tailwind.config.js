@@ -1,15 +1,13 @@
 // Tailwind configuration for the ReVive project.
 //
-// We wrap the configuration with `konsta/config` so that Konsta UI's
-// component classes are generated automatically. The `content` paths
-// include the Next.js pages, our React components, and the PWA source
-// files so that unused classes are purged correctly. Dark mode is set
-// to `class` so that a `dark` class on the `<html>` element toggles
-// dark mode. You can extend the theme or add plugins as needed.
+// This file defines the paths that Tailwind should scan for class names and
+// extends the default theme to add custom font families used by Konsta UI.
+// We intentionally avoid requiring `konsta/config` here because Konsta UI
+// version 5 no longer exports it. Instead, we import the Konsta theme CSS
+// directly in `styles/globals.css` (see that file for details) and rely on
+// Tailwind to purge unused styles based on the content paths defined below.
 
-const konstaConfig = require('konsta/config');
-
-module.exports = konstaConfig({
+module.exports = {
   content: [
     './pages/**/*.{js,jsx}',
     './components/**/*.{js,jsx}',
@@ -21,8 +19,7 @@ module.exports = konstaConfig({
       // Define custom font families used by Konsta UI. By adding
       // `fontFamily.ios` and `fontFamily.material`, Tailwind will
       // automatically generate `.font-ios` and `.font-material`
-      // utility classes. This avoids PostCSS errors when Konsta's
-      // base styles apply these classes.
+      // utility classes. These classes are used by Konsta's base styles.
       fontFamily: {
         ios: [
           '-apple-system',
@@ -41,4 +38,4 @@ module.exports = konstaConfig({
     },
   },
   plugins: [],
-});
+};

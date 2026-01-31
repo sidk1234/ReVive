@@ -1,98 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Page } from 'framework7-react';
-import {
-  Navbar,
-  List,
-  ListItem,
-  Card,
-  CardHeader,
-  CardContent,
-  Button,
-  Spinner,
-} from 'konsta/react';
-import AppTabbar from '../components/AppTabbar.jsx';
-import { supabase } from '../supabaseClient.js';
-import { useF7Router } from 'framework7-react';
+import React from 'react';
+import { Page, Block, BlockTitle, List, ListItem, Card, CardHeader, CardContent } from 'konsta/react';
 
 /**
- * ImpactPage displays the user's recycling impact. When logged in
- * the user sees a list of their most recent scan results along with
- * points. Anonymous guests are prompted to sign in to access this
- * feature.
+ * ImpactPage shows a placeholder history/impact view. In a real app this
+ * would retrieve the user's recycling history and statistics from the
+ * database. Here we simply display a static list.
  */
 export default function ImpactPage() {
-  const router = useF7Router();
-  const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState([]);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    async function loadEntries() {
-      setLoading(true);
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          setUser(null);
-          setEntries([]);
-          setLoading(false);
-          return;
-        }
-        setUser(session.user);
-        const { data, error } = await supabase
-          .from('impact_entries')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('scanned_at', { ascending: false })
-          .limit(20);
-        if (error) throw error;
-        setEntries(data || []);
-      } catch (err) {
-        console.error(err);
-        setEntries([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadEntries();
-  }, []);
-
-  const isGuest = !user;
-
+  const fakeHistory = [
+    { id: 1, item: 'Water Bottle', recyclable: true, date: '2026-01-01' },
+    { id: 2, item: 'Paper Cup', recyclable: false, date: '2026-01-02' },
+  ];
   return (
     <Page>
-      <Navbar large title="Impact" />
-      {isGuest ? (
-        <div className="p-4 space-y-4">
-          <p>You need to sign in to view your impact history.</p>
-          <Button large onClick={() => router.navigate('/account')}>
-            Sign in
-          </Button>
-        </div>
-      ) : loading ? (
-        <div className="flex items-center justify-center p-4">
-          <Spinner />
-        </div>
-      ) : (
-        <div className="p-4">
-          {entries.length === 0 ? (
-            <p>No entries yet. Start scanning to see your impact.</p>
-          ) : (
-            <List strong inset>
-              {entries.map((entry) => (
-                <ListItem
-                  key={entry.id}
-                  title={entry.item}
-                  subtitle={`${new Date(entry.scanned_at).toLocaleString()}`}
-                  after={`${entry.points || 0} pts`}
-                />
-              ))}
-            </List>
-          )}
-        </div>
-      )}
-      <AppTabbar activeTab="impact" />
+      <Block strong inset className="mt-4">
+        <BlockTitle large>Your Impact</BlockTitle>
+        <List strong inset>
+          {fakeHistory.map((h) => (
+            <ListItem key={h.id} title={h.item} after={h.recyclable ? '♻️' : '🗑️'} subtitle={h.date} />
+          ))}
+        </List>
+      </Block>
     </Page>
   );
 }
