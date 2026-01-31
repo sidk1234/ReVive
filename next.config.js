@@ -1,25 +1,31 @@
 /**
- * Next.js configuration for ReVive.
+ * Next.js configuration for the ReVive project.
  *
- * We enable `reactStrictMode` to surface potential bugs in development.
- *
- * The `transpilePackages` option tells Next's bundler to compile certain
- * ESM-only dependencies, including Framework7 and Konsta. Without this
- * directive, these packages expose conditional exports that can trigger the
- * "Default condition should be last one" error during the build. Including
- * Swiper and Dom7 here ensures their ESM modules are also transpiled.
- *
- * See: https://nextjs.org/docs/architecture/nextjs-compiler#transpilepackages
+ * We enable React strict mode and customise the Webpack configuration to
+ * mark certain Framework7 modules as external. Without this, the Next.js
+ * build attempts to resolve `framework7/lite-bundle`, `framework7-react`
+ * and related CSS bundles during the server-side build phase, which
+ * triggers errors like "Default condition should be last one" due to
+ * Framework7's package.json `exports` ordering. Declaring them as
+ * externals instructs Webpack not to bundle these packages; instead
+ * they will be loaded at runtime in the browser via dynamic imports in
+ * `RevivePWA.jsx`. See discussion in
+ * https://github.com/framework7io/framework7/issues/4061 for context.
  */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: [
-    'framework7',
-    'framework7-react',
-    'konsta',
-    'swiper',
-    'dom7'
-  ],
+  webpack: (config) => {
+    // Ensure externals array exists.
+    config.externals = config.externals || [];
+    // Declare Framework7 modules as externals to prevent Next.js from
+    // bundling them. They will be resolved at runtime in the browser.
+    config.externals.push({
+      'framework7/lite-bundle': 'commonjs framework7/lite-bundle',
+      'framework7-react': 'commonjs framework7-react',
+      'framework7/css/bundle': 'commonjs framework7/css/bundle',
+    });
+    return config;
+  },
 };
 
 module.exports = nextConfig;

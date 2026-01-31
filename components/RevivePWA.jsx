@@ -19,9 +19,7 @@ import { KonstaProvider } from 'konsta/react';
 // Import Konsta theme styles. The generic `konsta/css` path is not exported in
 // Konsta v5; instead import the theme stylesheet from the React build. See
 // https://konstaui.com/react/installation for details.
-// Note: the Konsta theme CSS is imported globally in `pages/_app.js`. Do not
-// import it here, as global CSS imports are only permitted in the custom
-// app component in Next.js.
+import 'konsta/react/theme.css';
 
 // Import routes for the PWA. These map paths to page components.
 import routes from '../pwa/routes.js';
@@ -34,14 +32,16 @@ export default function RevivePWA() {
   const [f7Components, setF7Components] = useState(null);
 
   useEffect(() => {
-    // Only run in the browser. Framework7 and its React bindings must not
-    // execute during server-side rendering. By constructing the module
-    // identifiers as variables and using the `webpackIgnore` directive, we
-    // prevent Next.js from attempting to resolve these modules at build
-    // time. The CSS bundle is also loaded dynamically.
+    // Run only on client
     let cancelled = false;
     async function loadFramework7() {
       try {
+        // Resolve module names at runtime. Storing them in variables prevents
+        // the bundler from evaluating them during build, which otherwise
+        // triggers the Framework7 package.json `exports` order bug (see
+        // https://github.com/framework7io/framework7/issues/4061).  Using
+        // variables and the `webpackIgnore` directive defers module loading
+        // until runtime in the browser.
         const f7CoreModule = 'framework7/lite-bundle';
         const f7ReactModule = 'framework7-react';
         const f7CssModule = 'framework7/css/bundle';
@@ -55,7 +55,10 @@ export default function RevivePWA() {
         } = await import(
           /* webpackIgnore: true */ f7ReactModule
         );
+        // Register the React plugin with Framework7 core.
         Framework7.use(Framework7React);
+        // Load Framework7 styles at runtime. The CSS is loaded only on
+        // client-side, preventing Next.js from touching Framework7's exports.
         await import(
           /* webpackIgnore: true */ f7CssModule
         );
@@ -63,6 +66,7 @@ export default function RevivePWA() {
           setF7Components({ Framework7App, Framework7View });
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Failed to load Framework7 modules', e);
       }
     }
