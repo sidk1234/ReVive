@@ -14,7 +14,11 @@ import { KonstaProvider } from 'konsta/react';
 // Import global styles. Framework7 includes safe area handling and page
 // transitions, while Konsta provides the native look and feel.
 import 'framework7/css/bundle';
-import 'konsta/css';
+// Konsta UI v3 does not export a standalone CSS file. Styles are generated
+// by Tailwind and the Konsta plugin defined in `tailwind.config.js`.
+// The `konsta/css` path is not exported, so importing it here will
+// cause build errors. We omit the import to avoid such issues.
+// import 'konsta/css';
 
 import routes from './routes.js';
 
