@@ -36,22 +36,31 @@ export default function RevivePWA() {
     let cancelled = false;
     async function loadFramework7() {
       try {
-        // Dynamically import Framework7 core and its React plugin.
+        // Resolve module names at runtime. Storing them in variables prevents
+        // the bundler from evaluating them during build, which otherwise
+        // triggers the Framework7 package.json `exports` order bug (see
+        // https://github.com/framework7io/framework7/issues/4061).  Using
+        // variables and the `webpackIgnore` directive defers module loading
+        // until runtime in the browser.
+        const f7CoreModule = 'framework7/lite-bundle';
+        const f7ReactModule = 'framework7-react';
+        const f7CssModule = 'framework7/css/bundle';
         const { default: Framework7 } = await import(
-          /* webpackChunkName: "framework7-core" */ 'framework7/lite-bundle'
+          /* webpackIgnore: true */ f7CoreModule
         );
         const {
           default: Framework7React,
           App: Framework7App,
           View: Framework7View,
         } = await import(
-          /* webpackChunkName: "framework7-react" */ 'framework7-react'
+          /* webpackIgnore: true */ f7ReactModule
         );
         // Register the React plugin with Framework7 core.
         Framework7.use(Framework7React);
-        // Dynamically import Framework7's CSS bundle.
+        // Load Framework7 styles at runtime. The CSS is loaded only on
+        // client-side, preventing Next.js from touching Framework7's exports.
         await import(
-          /* webpackChunkName: "framework7-css" */ 'framework7/css/bundle'
+          /* webpackIgnore: true */ f7CssModule
         );
         if (!cancelled) {
           setF7Components({ Framework7App, Framework7View });
