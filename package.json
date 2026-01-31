@@ -18,9 +18,16 @@
     "postcss": "^8.4.14",
     "autoprefixer": "^10.4.13",
     "@supabase/supabase-js": "^2.42.3",
-    "konsta": "^5.0.0",
-    "framework7": "^9.0.0",
-    "framework7-react": "^9.0.0",
+    // Downgrade Konsta and Framework7 to versions that avoid the
+    // conditional export bug that causes Next.js to fail during build.
+    // Konsta v3 and Framework7 v8 are stable and work well together in
+    // server-rendered environments.
+    "konsta": "^3.0.0",
+    "framework7": "^8.3.0",
+    "framework7-react": "^8.3.0",
     "clsx": "^1.2.1"
+    ,
+    "swiper": "^9.4.1",
+    "dom7": "^4.0.4"
   }
 }
