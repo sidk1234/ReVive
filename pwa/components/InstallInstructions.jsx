@@ -38,10 +38,13 @@ export default function InstallInstructions({ onContinue }) {
   }
 
   const handleContinue = () => {
+    // Call the callback first to update parent state
     if (onContinue) {
       onContinue();
-    } else {
-      router.push('/app/capture');
+    }
+    // Navigate to capture page - use window.location for reliable navigation
+    if (typeof window !== 'undefined') {
+      window.location.href = '/app/capture';
     }
   };
 
@@ -50,9 +53,9 @@ export default function InstallInstructions({ onContinue }) {
       <Block strong inset className="mt-8">
         <div className="flex flex-col items-center text-center mb-6">
           <img
-            src="/app/assets/logo.png"
+            src="/favicon-192.png"
             alt="ReVive"
-            className="w-24 h-24 mb-4"
+            className="w-24 h-24 mb-4 rounded-2xl"
             onError={(e) => {
               // Fallback if logo doesn't exist
               e.currentTarget.style.display = 'none';

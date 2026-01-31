@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import RevivePWA from '../../components/RevivePWA';
 
 // Dynamically import pages to reduce bundle size
@@ -17,6 +18,7 @@ export default function ReviveAppPage() {
   const slug = router.query.slug || [];
   const page = slug[0] || 'capture';
   const subPage = slug[1];
+  const isRoot = slug.length === 0;
 
   // Determine which page to render
   let PageComponent = CapturePage;
@@ -29,9 +31,17 @@ export default function ReviveAppPage() {
     else if (subPage === 'reset') PageComponent = AuthResetPage;
   } else if (page === 'offline') PageComponent = OfflinePage;
 
+  // Add head tags for PWA
   return (
-    <RevivePWA>
-      <PageComponent />
-    </RevivePWA>
+    <>
+      <Head>
+        <title>ReVive - Intelligent Recycling Assistant</title>
+        <meta name="description" content="AI-powered recycling assistant with location-specific guidance" />
+        <meta name="apple-mobile-web-app-title" content="ReVive" />
+      </Head>
+      <RevivePWA isRoot={isRoot}>
+        <PageComponent />
+      </RevivePWA>
+    </>
   );
 }

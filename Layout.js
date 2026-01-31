@@ -16,6 +16,9 @@ export default function Layout({ children }) {
         <meta name="theme-color" content="#10B981" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="ReVive" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/favicon-192.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/favicon-512.png" />
       </Head>
       {/*
         Global theming and typography have been moved into the global

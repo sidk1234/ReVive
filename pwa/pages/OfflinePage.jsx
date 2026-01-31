@@ -6,9 +6,9 @@ export default function OfflinePage() {
     <Page>
       <Block strong inset className="flex flex-col items-center justify-center min-h-screen">
         <img
-          src="/app/assets/logo.png"
+          src="/favicon-192.png"
           alt="ReVive"
-          className="w-32 h-32 mb-6"
+          className="w-32 h-32 mb-6 rounded-2xl"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
           }}
