@@ -3,6 +3,65 @@
 @tailwind utilities;
 
 /*
+ * Global theme and typography settings
+ *
+ * Import the Inter font from Google Fonts. Placing this import here
+ * (rather than in a component) ensures that Next.js renders the same CSS
+ * on the server and the client, preventing hydration mismatches caused
+ * by differing quote encodings. See the Layout.js documentation for
+ * additional context.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+/* Define root colour variables used throughout the application. These
+ * variables were previously defined in Layout.js; moving them here
+ * ensures the same values apply across all pages and components.
+ */
+:root {
+  --color-primary: #10B981;
+  --color-secondary: #06B6D4;
+  --color-accent: #3B82F6;
+  --color-bg-dark: #0A1628;
+  --color-bg-darker: #020610;
+}
+
+/* Apply the Inter font globally.  Use double quotes around the font
+ * name to avoid HTML-escaping differences between server and client.
+ */
+* {
+  font-family: "Inter", sans-serif;
+}
+
+/* Smooth scroll behaviour for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbars matching the brand palette */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 58, 95, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10B981 0%, #06B6D4 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #34D399 0%, #22D3EE 100%);
+}
+
+/* Highlight selected text using brand colours */
+::selection {
+  background: rgba(16, 185, 129, 0.3);
+  color: white;
+}
+
+/*
  * Import Konsta UI theme styles. Konsta UI version 5 distributes its
  * theme as a CSS file under `konsta/react/theme.css`. Importing it here
  * ensures that component variables (colors, sizes, etc.) are available.
