@@ -12,7 +12,7 @@ import {
 } from 'konsta/react';
 import { Link as RouterLink } from 'react-router-dom';
 import routes from '../routes.js';
-import DemoIcon from '../components/DemoIcon.jsx';
+import DemoIcon from '../components/DemoIcon';
 
 export default function HomePage({
   theme,
