@@ -12,6 +12,10 @@ export default function Layout({ children }) {
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+        <link rel="manifest" href="/app/manifest.webmanifest" />
+        <meta name="theme-color" content="#10B981" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </Head>
       {/*
         Global theming and typography have been moved into the global

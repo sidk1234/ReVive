@@ -1,55 +1,40 @@
 import React from 'react';
-import { Tabbar, TabbarLink } from 'konsta/react';
-import { useF7Router } from 'framework7-react';
+import { Tabbar, TabbarLink, Icon } from 'konsta/react';
+import {
+  Settings as IconSettings,
+  Person as IconPerson,
+  Camera as IconCamera,
+  ChartBar as IconChartBar,
+  Trophy as IconTrophy,
+} from 'framework7-icons/react';
 
 /**
- * AppTabbar renders the bottom navigation bar. Each tab corresponds to
- * a major section of the app. Clicking a tab uses the Framework7
- * router to navigate to the associated path.
- *
- * The active tab is determined via the `activeTab` prop. When
- * implementing pages you can derive the active tab by examining the
- * current route's path.
+ * AppTabbar renders the bottom navigation bar matching the Swift app structure:
+ * Settings, Account, Capture, Impact, Leaderboard (Ranks)
  */
-export default function AppTabbar({ activeTab }) {
-  const router = useF7Router();
-
-  function go(path) {
-    router.navigate(path);
-  }
+export default function AppTabbar({ activeTab, onNavigate }) {
+  const tabs = [
+    { id: 'settings', path: '/settings', label: 'Settings', icon: IconSettings },
+    { id: 'account', path: '/account', label: 'Account', icon: IconPerson },
+    { id: 'capture', path: '/capture', label: 'Capture', icon: IconCamera },
+    { id: 'impact', path: '/impact', label: 'Impact', icon: IconChartBar },
+    { id: 'leaderboard', path: '/leaderboard', label: 'Ranks', icon: IconTrophy },
+  ];
 
   return (
-    <Tabbar labels className="k-safe-area-inset-bottom">
-      <TabbarLink
-        active={activeTab === 'settings'}
-        onClick={() => go('/settings')}
-        label="Settings"
-        icon="⚙️"
-      />
-      <TabbarLink
-        active={activeTab === 'account'}
-        onClick={() => go('/account')}
-        label="Account"
-        icon="👤"
-      />
-      <TabbarLink
-        active={activeTab === 'capture'}
-        onClick={() => go('/capture')}
-        label="Capture"
-        icon="📷"
-      />
-      <TabbarLink
-        active={activeTab === 'impact'}
-        onClick={() => go('/impact')}
-        label="Impact"
-        icon="📊"
-      />
-      <TabbarLink
-        active={activeTab === 'leaderboard'}
-        onClick={() => go('/leaderboard')}
-        label="Ranks"
-        icon="🏆"
-      />
+    <Tabbar labels className="k-safe-area-inset-bottom" translucent>
+      {tabs.map((tab) => {
+        const IconComponent = tab.icon;
+        return (
+          <TabbarLink
+            key={tab.id}
+            active={activeTab === tab.id}
+            onClick={() => onNavigate && onNavigate(tab.path)}
+            icon={<Icon ios={<IconComponent />} material={<IconComponent />} />}
+            label={tab.label}
+          />
+        );
+      })}
     </Tabbar>
   );
 }

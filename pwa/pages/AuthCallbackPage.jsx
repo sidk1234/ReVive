@@ -1,26 +1,42 @@
 import React, { useEffect } from 'react';
-import { Page, Block, BlockTitle, Preloader } from 'konsta/react';
-import { useRouter } from 'next/router';
+import { Page, Block, Preloader } from 'konsta/react';
+import { useAppRouter } from '../hooks/useAppRouter';
+import { supabase } from '../supabaseClient';
 
-/**
- * AuthCallbackPage handles OAuth redirect. In this simplified version
- * it just shows a loading indicator and redirects the user back to the
- * capture page after a short delay. Replace with your Supabase
- * callback handling logic.
- */
 export default function AuthCallbackPage() {
-  const router = useRouter();
+  const router = useAppRouter();
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/app/capture');
-    }, 1000);
-    return () => clearTimeout(timer);
+    const handleAuthCallback = async () => {
+      try {
+        // Handle the OAuth callback
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Auth callback error:', error);
+          router.navigate('/account');
+          return;
+        }
+
+        if (data.session) {
+          // Successfully authenticated
+          router.navigate('/capture');
+        } else {
+          router.navigate('/account');
+        }
+      } catch (error) {
+        console.error('Auth callback exception:', error);
+        router.navigate('/account');
+      }
+    };
+
+    handleAuthCallback();
   }, [router]);
+
   return (
     <Page>
-      <Block strong inset className="mt-4 flex flex-col items-center justify-center">
-        <BlockTitle>Signing you in…</BlockTitle>
-        <Preloader size="w-8 h-8" />
+      <Block strong inset className="flex flex-col items-center justify-center min-h-screen">
+        <Preloader size="w-12 h-12" />
+        <p className="mt-4 text-opacity-60">Signing you in…</p>
       </Block>
     </Page>
   );

@@ -1,133 +1,80 @@
-import React from 'react';
-import { useRouter } from 'next/router';
-import {
-  Tabbar,
-  TabbarLink,
-  Navbar,
-  Icon,
-  // Konsta v5 requires wrapping the app in KonstaProvider to apply
-  // global theme variables and safe area styles. Without this
-  // provider the components render without styles, leading to the
-  // “unstyled” appearance reported by the user. See the Konsta UI
-  // Next.js integration docs for details.
-  KonstaProvider,
-} from 'konsta/react';
-import {
-  Home as IconHome,
-  Camera as IconCamera,
-  ChartBar as IconChartBar,
-  User as IconUser,
-  Settings as IconSettings
-} from 'framework7-icons/react';
+import React, { useState, useEffect } from 'react';
+import { KonstaProvider } from 'konsta/react';
+import { ThemeProvider } from '../pwa/contexts/ThemeContext';
+import { AuthProvider } from '../pwa/contexts/AuthContext';
+import InstallInstructions from '../pwa/components/InstallInstructions';
 
-// Import pages for each section of the PWA
-import CapturePage from '../pwa/pages/CapturePage';
-import ImpactPage from '../pwa/pages/ImpactPage';
-import LeaderboardPage from '../pwa/pages/LeaderboardPage';
-import SettingsPage from '../pwa/pages/SettingsPage';
-import AccountPage from '../pwa/pages/AccountPage';
-import AuthCallbackPage from '../pwa/pages/AuthCallbackPage';
-import AuthResetPage from '../pwa/pages/AuthResetPage';
-import OfflinePage from '../pwa/pages/OfflinePage';
+export default function RevivePWA({ children }) {
+  const [showInstall, setShowInstall] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [f7Ready, setF7Ready] = useState(false);
 
-/**
- * RevivePWA implements a simple client-side router on top of Next.js's
- * catch-all route. It renders a tab bar for navigation and the
- * corresponding page component for the current path. Framework7 is
- * used only for icons via `framework7-icons/react` and for transition
- * classes applied on page containers. Konsta UI components provide
- * styling and theming. Note: Only the core Konsta components are used; no
- * Framework7 router features are used.
- */
-export default function RevivePWA() {
-  const router = useRouter();
-  // slug is an array of path segments after /app
-  const { view } = router.query;
-  const slug = Array.isArray(view) ? view : [];
-  const currentPage = slug[0] || 'capture';
+  useEffect(() => {
+    // Check if installed
+    if (typeof window !== 'undefined') {
+      const standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone ||
+        document.referrer.includes('android-app://');
+      setIsStandalone(standalone);
+      setShowInstall(!standalone);
 
-  // Determine which page to render
-  let PageComponent;
-  switch (currentPage) {
-    case 'capture':
-      PageComponent = CapturePage;
-      break;
-    case 'impact':
-      PageComponent = ImpactPage;
-      break;
-    case 'leaderboard':
-      PageComponent = LeaderboardPage;
-      break;
-    case 'settings':
-      PageComponent = SettingsPage;
-      break;
-    case 'account':
-      PageComponent = AccountPage;
-      break;
-    case 'auth':
-      // /app/auth/callback and /app/auth/reset
-      if (slug[1] === 'callback') PageComponent = AuthCallbackPage;
-      else if (slug[1] === 'reset') PageComponent = AuthResetPage;
-      else PageComponent = CapturePage;
-      break;
-    case 'offline':
-      PageComponent = OfflinePage;
-      break;
-    default:
-      PageComponent = CapturePage;
+      // Check online status
+      setIsOnline(navigator.onLine);
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      // Initialize Framework7 after mount
+      setF7Ready(true);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
+
+
+  // Show offline page if offline
+  if (!isOnline) {
+    return (
+      <KonstaProvider theme="ios" safeAreas>
+        <ThemeProvider>
+          <AuthProvider>
+            <div id="app" />
+          </AuthProvider>
+        </ThemeProvider>
+      </KonstaProvider>
+    );
   }
 
-  // Handler to navigate to a tab route
-  const navigate = (path) => {
-    router.push(`/app/${path}`);
-  };
+  // Show install instructions if not installed
+  if (showInstall && !isStandalone && f7Ready) {
+    return (
+      <KonstaProvider theme="ios" safeAreas>
+        <ThemeProvider>
+          <AuthProvider>
+            <InstallInstructions onContinue={() => setShowInstall(false)} />
+          </AuthProvider>
+        </ThemeProvider>
+      </KonstaProvider>
+    );
+  }
 
+  // Main PWA - use Next.js routing with Konsta UI
+  // Framework7 is used only for transitions/animations, not routing
   return (
-    // Wrap the entire PWA in KonstaProvider to enable theming and
-    // safe-area-aware styles. This provider should be used at the
-    // highest level of any Konsta UI app.
     <KonstaProvider theme="ios" safeAreas>
-      <div className="flex flex-col h-full">
-        {/* Top navbar with large title and back button if needed */}
-        <Navbar title="ReVive" large transparent />
-        {/* Render the current page */}
-        <div className="flex-1 overflow-y-auto">
-          <PageComponent />
-        </div>
-        {/* Tab bar for navigation */}
-        <Tabbar labels className="safe-area-bottom">
-          <TabbarLink
-            active={currentPage === 'capture'}
-            onClick={() => navigate('capture')}
-            icon={<Icon ios={<IconCamera />} material={<IconCamera />} />}
-            label="Capture"
-          />
-          <TabbarLink
-            active={currentPage === 'impact'}
-            onClick={() => navigate('impact')}
-            icon={<Icon ios={<IconChartBar />} material={<IconChartBar />} />}
-            label="Impact"
-          />
-          <TabbarLink
-            active={currentPage === 'leaderboard'}
-            onClick={() => navigate('leaderboard')}
-            icon={<Icon ios={<IconHome />} material={<IconHome />} />}
-            label="Leaderboard"
-          />
-          <TabbarLink
-            active={currentPage === 'settings'}
-            onClick={() => navigate('settings')}
-            icon={<Icon ios={<IconSettings />} material={<IconSettings />} />}
-            label="Settings"
-          />
-          <TabbarLink
-            active={currentPage === 'account'}
-            onClick={() => navigate('account')}
-            icon={<Icon ios={<IconUser />} material={<IconUser />} />}
-            label="Account"
-          />
-        </Tabbar>
-      </div>
+      <ThemeProvider>
+        <AuthProvider>
+          <div id="app" className="h-screen w-screen overflow-hidden">
+            {children}
+          </div>
+        </AuthProvider>
+      </ThemeProvider>
     </KonstaProvider>
   );
 }

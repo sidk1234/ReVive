@@ -67,6 +67,12 @@ export default function Navbar() {
   // determine both the desktop and mobile menus.  Adding "Sponsors"
   // ensures the sponsor page is reachable from the header.
   const navItems = ['About', 'Impact', 'Locations', 'Community', 'Sponsors'];
+  
+  // App navigation buttons
+  const appButtons = [
+    { label: 'Open App', href: '/app' },
+    { label: 'See Demo', href: '/demo' },
+  ];
 
   return (
     <>
@@ -110,6 +116,17 @@ export default function Navbar() {
                   whileHover={{ y: -2 }}
                 >
                   {item}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-cyan-400 group-hover:w-full transition-all duration-300" />
+                </motion.a>
+              ))}
+              {appButtons.map((btn) => (
+                <motion.a
+                  key={btn.label}
+                  href={btn.href}
+                  className="text-white/70 hover:text-white text-sm font-medium transition-colors relative group"
+                  whileHover={{ y: -2 }}
+                >
+                  {btn.label}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-cyan-400 group-hover:w-full transition-all duration-300" />
                 </motion.a>
               ))}
@@ -241,6 +258,16 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item}
+              </a>
+            ))}
+            {appButtons.map((btn) => (
+              <a
+                key={btn.label}
+                href={btn.href}
+                className="text-white/70 hover:text-white text-lg font-medium py-2 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {btn.label}
               </a>
             ))}
             <div className="pt-4 border-t border-white/10">
