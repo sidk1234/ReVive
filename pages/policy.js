@@ -81,6 +81,14 @@ export default function Policy() {
               </p>
             </div>
 
+            {/* Public leaderboard disclosure */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+              <h2 className="text-2xl font-semibold mb-4">Public Leaderboard</h2>
+              <p className="text-white/70 leading-relaxed">
+                ReVive includes a public leaderboard that displays your display name and aggregated recycling statistics (for example, total points, number of scans and number of recyclable items). Only your display name and these summary statistics are shown—no email address or other personal information is displayed.  You can opt‑out of appearing on the leaderboard by changing your display name or deleting your account.
+              </p>
+            </div>
+
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
               <h2 className="text-2xl font-semibold mb-4">Data Deletion</h2>
               <p className="text-white/70 leading-relaxed">

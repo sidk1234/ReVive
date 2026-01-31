@@ -57,10 +57,18 @@ export default function Terms() {
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-              <h2 className="text-2xl font-semibold mb-4">Data & Privacy</h2>
+              <h2 className="text-2xl font-semibold mb-4">Data &amp; Privacy</h2>
               <p className="text-white/70 leading-relaxed">
                 Your use of ReVive is governed by our Privacy Policy. We only collect limited Google
-                account data needed to provide the service.
+                account data needed to provide the service. See the Privacy Policy for more details.
+              </p>
+            </div>
+
+            {/* Public leaderboard disclosure */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+              <h2 className="text-2xl font-semibold mb-4">Public Leaderboard</h2>
+              <p className="text-white/70 leading-relaxed">
+                ReVive displays a public leaderboard showing each participant’s display name and aggregated recycling statistics (such as total points, number of scans and recyclable count). By using ReVive you consent to the publication of this information.  If you wish to opt&#45;out you may change your display name or delete your account at any time.
               </p>
             </div>
 
