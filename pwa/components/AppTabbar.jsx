@@ -1,40 +1,39 @@
 import React from 'react';
 import { Tabbar, TabbarLink, Icon } from 'konsta/react';
-import {
-  Settings as IconSettings,
-  Person as IconPerson,
-  Camera as IconCamera,
-  ChartBar as IconChartBar,
-  Trophy as IconTrophy,
-} from 'framework7-icons/react';
 
 /**
- * AppTabbar renders the bottom navigation bar matching the Swift app structure:
- * Settings, Account, Capture, Impact, Leaderboard (Ranks)
+ * AppTabbar
+ * Native-style bottom tab bar using Konsta UI + Framework7 Icons
  */
 export default function AppTabbar({ activeTab, onNavigate }) {
   const tabs = [
-    { id: 'settings', path: '/settings', label: 'Settings', icon: IconSettings },
-    { id: 'account', path: '/account', label: 'Account', icon: IconPerson },
-    { id: 'capture', path: '/capture', label: 'Capture', icon: IconCamera },
-    { id: 'impact', path: '/impact', label: 'Impact', icon: IconChartBar },
-    { id: 'leaderboard', path: '/leaderboard', label: 'Ranks', icon: IconTrophy },
+    { id: 'settings', path: '/settings', label: 'Settings', icon: 'gear_alt' },
+    { id: 'account', path: '/account', label: 'Account', icon: 'person' },
+    { id: 'capture', path: '/capture', label: 'Capture', icon: 'camera' },
+    { id: 'impact', path: '/impact', label: 'Impact', icon: 'chart_bar' },
+    { id: 'leaderboard', path: '/leaderboard', label: 'Ranks', icon: 'trophy' },
   ];
 
   return (
-    <Tabbar labels className="k-safe-area-inset-bottom" translucent>
-      {tabs.map((tab) => {
-        const IconComponent = tab.icon;
-        return (
-          <TabbarLink
-            key={tab.id}
-            active={activeTab === tab.id}
-            onClick={() => onNavigate && onNavigate(tab.path)}
-            icon={<Icon ios={<IconComponent />} material={<IconComponent />} />}
-            label={tab.label}
-          />
-        );
-      })}
+    <Tabbar
+      labels
+      translucent
+      className="
+        k-safe-area-inset-bottom
+        border-t border-black/10 dark:border-white/10
+        bg-white/80 dark:bg-black/60
+        backdrop-blur-md
+      "
+    >
+      {tabs.map((tab) => (
+        <TabbarLink
+          key={tab.id}
+          active={activeTab === tab.id}
+          onClick={() => onNavigate?.(tab.path)}
+          icon={<Icon icon={tab.icon} />}
+          label={tab.label}
+        />
+      ))}
     </Tabbar>
   );
 }
