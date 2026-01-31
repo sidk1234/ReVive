@@ -10,6 +10,30 @@ html, body {
   min-height: 100%;
 }
 
+/*
+ * Konsta UI base styles rely on Tailwind CSS utility classes `font-ios` and
+ * `font-material` for typography. These classes are not provided by
+ * default in Tailwind, so we define them here within the base layer. Without
+ * these definitions, attempting to apply `@apply font-ios` in Konsta's
+ * compiled CSS (e.g. in `konsta/styles/base.css`) will produce a PostCSS
+ * error such as:
+ *   The `font-ios` class does not exist. If `font-ios` is a custom class,
+ *   make sure it is defined within a `@layer` directive.
+ * By defining these classes in the `base` layer, we ensure that the
+ * definitions are available during compilation. We map both to the
+ * `font-sans` family used elsewhere in the project. Should you wish to
+ * customise the font stack for iOS and Material themes separately, you can
+ * modify the `@apply` targets below accordingly.
+ */
+@layer base {
+  .font-ios {
+    @apply font-sans;
+  }
+  .font-material {
+    @apply font-sans;
+  }
+}
+
 #__next {
   min-height: 100%;
   background: #020610;
