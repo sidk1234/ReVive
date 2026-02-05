@@ -13,6 +13,7 @@ const CACHE = "revive-app-v1";
 const CORE = [
   "/app",
   "/app/manifest.webmanifest",
+  "/app/offline.html",
   "/app/icons/icon-192.png",
   "/app/icons/icon-512.png",
 ];
@@ -64,7 +65,7 @@ self.addEventListener("fetch", (event) => {
           return fresh;
         } catch {
           const cached = await caches.match(req);
-          return cached || caches.match("/app") || Response.error();
+          return cached || caches.match("/app/offline.html") || Response.error();
         }
       })()
     );

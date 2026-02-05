@@ -1,15 +1,85 @@
 @import "tailwindcss";
-/* Konsta UI theme (React) */
-@import "konsta/react/theme.css";
+
+@import "../kitchen-sink/konsta-src/theme.css";
 
 /* Reset default margins */
 html,
-body,
-#__next {
-  width: 100%;
-  height: 100%;
+body {
   margin: 0;
   padding: 0;
+  background: #020610;
+  min-height: 100%;
+}
+
+#__next {
+  min-height: 100%;
+  background: #020610;
+}
+
+/* ReVive PWA styles */
+.revive-pwa-root {
+  min-height: 100%;
+  background: radial-gradient(
+      circle at top,
+      rgba(16, 185, 129, 0.18),
+      rgba(2, 6, 16, 0.95)
+    ),
+    linear-gradient(180deg, rgba(4, 11, 22, 0.98) 0%, rgba(2, 6, 12, 1) 100%);
+  color: #f1f5f9;
+}
+
+.revive-route-page {
   background: transparent;
-  overscroll-behavior: none;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+.revive-navbar {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.revive-tabbar-shell {
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(10, 22, 40, 0.7);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.revive-tabbar {
+  width: 100%;
+}
+
+.revive-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 20px;
+}
+
+.revive-gate-wrap {
+  min-height: 100vh;
+  background: radial-gradient(
+      circle at top,
+      rgba(16, 185, 129, 0.18),
+      rgba(2, 6, 16, 0.98)
+    ),
+    linear-gradient(180deg, rgba(4, 11, 22, 0.98) 0%, rgba(2, 6, 12, 1) 100%);
+}
+
+.revive-gate-page {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+.revive-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  backdrop-filter: blur(14px);
 }

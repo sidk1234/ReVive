@@ -115,6 +115,18 @@ export default function Navbar() {
               ))}
             </div>
 
+            {/* Quick App Links */}
+            <div className="hidden md:flex items-center gap-3">
+              <Link href="/app">
+                <LiquidGlassButton size="sm">Open App</LiquidGlassButton>
+              </Link>
+              <Link href="/demo">
+                <LiquidGlassButton size="sm" className="!bg-transparent">
+                  See Demo
+                </LiquidGlassButton>
+              </Link>
+            </div>
+
             {/* Auth Section */}
             <div className="hidden md:flex items-center gap-4">
               {isAuthenticated && user ? (
@@ -233,6 +245,20 @@ export default function Navbar() {
           }}
         >
           <div className="flex flex-col gap-4">
+            <Link
+              href="/app"
+              className="text-white/70 hover:text-white text-lg font-medium py-2 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Open App
+            </Link>
+            <Link
+              href="/demo"
+              className="text-white/70 hover:text-white text-lg font-medium py-2 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              See Demo
+            </Link>
             {navItems.map((item) => (
               <a
                 key={item}
@@ -308,4 +334,3 @@ export default function Navbar() {
     </>
   );
 }
-

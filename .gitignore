@@ -13,3 +13,9 @@ pnpm-debug.log*
 # Kitchen sink
 /kitchen-sink/node_modules
 /public/kitchensink-app
+
+# ReVive iOS source zip
+ReViveApp.zip
+/examples/ReViveApp.zip
+examples/
+ReVive/swift/ReViveApp.zip

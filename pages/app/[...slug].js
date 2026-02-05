@@ -1,22 +1,25 @@
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useMemo } from "react";
-import { ReVivePWA } from "../../components/pwa/ReVivePWA";
+const ReVivePWA = dynamic(() => import("../../components/pwa/ReVivePWA"), { ssr: false });
 
 function slugToTab(slugArr) {
   const slug = (slugArr && slugArr.length ? slugArr[0] : "scan").toLowerCase();
   if (slug === "settings") return "settings";
   if (slug === "impact") return "impact";
-  if (slug === "leaderboard") return "leaderboard";
+  if (slug === "leaderboard" || slug === "ranks") return "leaderboard";
   if (slug === "account") return "account";
+  if (slug === "capture" || slug === "scan") return "scan";
   return "scan";
 }
+
 
 export default function ReViveAppCatchAll({ slug }) {
   const initialTab = useMemo(() => slugToTab(slug), [slug]);
   return (
     <>
       <Head>
-        <title>ReVive — App</title>
+        <title>ReVive - App</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#0b1220" />
         <link rel="manifest" href="/app/manifest.webmanifest" />

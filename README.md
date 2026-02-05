@@ -1,15 +1,14 @@
 # ReVive Earth
 
-A Next.js application for recycling and environmental impact tracking.
+ReVive is a Next.js site with an embedded fidelity PWA at `/app` that mirrors the native iOS experience.
 
 ## Features
 
-- User authentication and profiles
-- Recycling activity tracking
-- Community engagement
-- Impact metrics and visualization
-- Location-based services
-- Admin dashboard
+- Public marketing site
+- /app PWA with Konsta UI + Framework7 routing
+- Supabase auth + impact tracking
+- ZIP-aware recycling guidance
+- Public leaderboard
 
 ## New: Konsta UI Kitchen Sink
 
@@ -122,6 +121,8 @@ ReVive-main/
 - `/login` - Login page
 - `/admin` - Admin dashboard
 - `/u/[username]` - User profiles
+- `/app` - ReVive PWA (installable)
+- `/demo` - PWA demo page
 
 ### Kitchen Sink Route
 
@@ -159,7 +160,12 @@ Create a `.env.local` file with the following:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=https://reviveearth.vercel.app
 ```
+
+## Deployment
+
+See `README/DEPLOY.md` for local run steps and Vercel deployment notes.
 
 ## Contributing
 

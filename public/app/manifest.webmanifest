@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
-  "description": "ReVive — recycling scanner, history, impact, and leaderboards.",
+  "description": "ReVive - recycling scanner, history, impact, and leaderboards.",
   "icons": [
     {
       "src": "/app/icons/icon-192.png",

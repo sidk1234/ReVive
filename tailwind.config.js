@@ -3,12 +3,14 @@ module.exports = {
   content: [
     "./pages/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
-    // If you use Konsta's classnames in JS, keep this. Otherwise it can be removed.
-    "./node_modules/konsta/**/*.{js,jsx,ts,tsx}",
-    "!./kitchen-sink/**",
+    "./kitchen-sink/konsta-src/**/*.{js,jsx,ts,tsx,css}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Custom colors can be added here to match the marketing site.
+      },
+    },
   },
   plugins: [],
 };

@@ -39,6 +39,18 @@ export default function Terms() {
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+              <h2 className="text-2xl font-semibold mb-4">Public Leaderboard</h2>
+              <p className="text-white/70 leading-relaxed">
+                ReVive includes a public leaderboard visible to anyone. Your display name and aggregate
+                recycling stats (points, scans, recyclable count) may appear publicly. Email addresses
+                are never shown.
+              </p>
+              <p className="mt-4 text-white/70 leading-relaxed">
+                You can opt out at any time by changing your display name or deleting your account.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
               <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
               <p className="text-white/70 leading-relaxed">
                 You must sign in using a Google account to use ReVive. You are responsible for all
