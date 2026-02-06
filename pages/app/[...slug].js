@@ -7,12 +7,11 @@ function slugToTab(slugArr) {
   const slug = (slugArr && slugArr.length ? slugArr[0] : "scan").toLowerCase();
   if (slug === "settings") return "settings";
   if (slug === "impact") return "impact";
-  if (slug === "leaderboard" || slug === "ranks") return "leaderboard";
+  if (slug === "ranks" || slug === "leaderboard") return "ranks";
   if (slug === "account") return "account";
-  if (slug === "capture" || slug === "scan") return "scan";
-  return "scan";
+  if (slug === "capture" || slug === "scan") return "capture";
+  return "capture";
 }
-
 
 export default function ReViveAppCatchAll({ slug }) {
   const initialTab = useMemo(() => slugToTab(slug), [slug]);
