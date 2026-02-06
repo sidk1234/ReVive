@@ -564,6 +564,7 @@ function CapturePage() {
   const [sourceImage, setSourceImage] = useState(null);
   const [detections, setDetections] = useState([]);
   const [edgeOverlay, setEdgeOverlay] = useState(null);
+  const [fillOverlay, setFillOverlay] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
@@ -721,12 +722,12 @@ function CapturePage() {
       }
     }
     const dilated = new Uint8Array(size * size);
-    for (let y = 1; y < size - 1; y += 1) {
-      for (let x = 1; x < size - 1; x += 1) {
+    for (let y = 2; y < size - 2; y += 1) {
+      for (let x = 2; x < size - 2; x += 1) {
         const idx = y * size + x;
         if (!edgeMask[idx]) continue;
-        for (let dy = -1; dy <= 1; dy += 1) {
-          for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -2; dy <= 2; dy += 1) {
+          for (let dx = -2; dx <= 2; dx += 1) {
             dilated[idx + dy * size + dx] = 1;
           }
         }
@@ -758,6 +759,81 @@ function CapturePage() {
     if (edgeCount < size * size * 0.002) {
       return null;
     }
+    const visited = new Uint8Array(size * size);
+    const stack = [];
+    for (let x = 0; x < size; x += 1) {
+      const topIdx = x;
+      const bottomIdx = (size - 1) * size + x;
+      if (!dilated[topIdx]) {
+        visited[topIdx] = 1;
+        stack.push(topIdx);
+      }
+      if (!dilated[bottomIdx]) {
+        visited[bottomIdx] = 1;
+        stack.push(bottomIdx);
+      }
+    }
+    for (let y = 0; y < size; y += 1) {
+      const leftIdx = y * size;
+      const rightIdx = y * size + (size - 1);
+      if (!dilated[leftIdx]) {
+        visited[leftIdx] = 1;
+        stack.push(leftIdx);
+      }
+      if (!dilated[rightIdx]) {
+        visited[rightIdx] = 1;
+        stack.push(rightIdx);
+      }
+    }
+    const neighbors = [
+      -size,
+      size,
+      -1,
+      1,
+      -size - 1,
+      -size + 1,
+      size - 1,
+      size + 1,
+    ];
+    while (stack.length) {
+      const idx = stack.pop();
+      for (let i = 0; i < neighbors.length; i += 1) {
+        const n = idx + neighbors[i];
+        if (n < 0 || n >= size * size) continue;
+        if (visited[n] || dilated[n]) continue;
+        visited[n] = 1;
+        stack.push(n);
+      }
+    }
+    const fillData = ctx.createImageData(size, size);
+    let fillCount = 0;
+    let fillMinX = size;
+    let fillMinY = size;
+    let fillMaxX = 0;
+    let fillMaxY = 0;
+    for (let y = 1; y < size - 1; y += 1) {
+      for (let x = 1; x < size - 1; x += 1) {
+        const idx = y * size + x;
+        if (!dilated[idx] && !visited[idx]) {
+          fillCount += 1;
+          if (x < fillMinX) fillMinX = x;
+          if (y < fillMinY) fillMinY = y;
+          if (x > fillMaxX) fillMaxX = x;
+          if (y > fillMaxY) fillMaxY = y;
+          const p = idx * 4;
+          fillData.data[p] = 145;
+          fillData.data[p + 1] = 95;
+          fillData.data[p + 2] = 255;
+          fillData.data[p + 3] = 120;
+        }
+      }
+    }
+    if (fillCount < size * size * 0.002) {
+      fillMinX = minX;
+      fillMinY = minY;
+      fillMaxX = maxX;
+      fillMaxY = maxY;
+    }
     for (let y = 0; y < size; y += 1) {
       for (let x = 0; x < size; x += 1) {
         if (x < minX || x > maxX || y < minY || y > maxY) {
@@ -772,20 +848,34 @@ function CapturePage() {
     const edgeCtx = edgeCanvas.getContext("2d");
     if (!edgeCtx) return null;
     edgeCtx.putImageData(edgeData, 0, 0);
-    const fullCanvas = document.createElement("canvas");
-    fullCanvas.width = image.width;
-    fullCanvas.height = image.height;
-    const fullCtx = fullCanvas.getContext("2d");
-    if (!fullCtx) return null;
-    fullCtx.imageSmoothingEnabled = true;
-    fullCtx.drawImage(edgeCanvas, crop.x, crop.y, crop.width, crop.height);
-    const overlay = fullCanvas.toDataURL("image/png");
+    const fillCanvas = document.createElement("canvas");
+    fillCanvas.width = size;
+    fillCanvas.height = size;
+    const fillCtx = fillCanvas.getContext("2d");
+    if (!fillCtx) return null;
+    fillCtx.putImageData(fillData, 0, 0);
+    const edgeFull = document.createElement("canvas");
+    edgeFull.width = image.width;
+    edgeFull.height = image.height;
+    const edgeFullCtx = edgeFull.getContext("2d");
+    if (!edgeFullCtx) return null;
+    edgeFullCtx.imageSmoothingEnabled = true;
+    edgeFullCtx.drawImage(edgeCanvas, crop.x, crop.y, crop.width, crop.height);
+    const fillFull = document.createElement("canvas");
+    fillFull.width = image.width;
+    fillFull.height = image.height;
+    const fillFullCtx = fillFull.getContext("2d");
+    if (!fillFullCtx) return null;
+    fillFullCtx.imageSmoothingEnabled = true;
+    fillFullCtx.drawImage(fillCanvas, crop.x, crop.y, crop.width, crop.height);
+    const overlay = edgeFull.toDataURL("image/png");
+    const fillOverlay = fillFull.toDataURL("image/png");
     const scaleX = crop.width / size;
     const scaleY = crop.height / size;
-    let boxX = crop.x + minX * scaleX;
-    let boxY = crop.y + minY * scaleY;
-    let boxW = (maxX - minX) * scaleX;
-    let boxH = (maxY - minY) * scaleY;
+    let boxX = crop.x + fillMinX * scaleX;
+    let boxY = crop.y + fillMinY * scaleY;
+    let boxW = (fillMaxX - fillMinX) * scaleX;
+    let boxH = (fillMaxY - fillMinY) * scaleY;
     const padX = boxW * 0.08;
     const padY = boxH * 0.08;
     boxX = Math.max(0, boxX - padX);
@@ -794,6 +884,7 @@ function CapturePage() {
     boxH = Math.min(image.height - boxY, boxH + padY * 2);
     return {
       overlay,
+      fillOverlay,
       bbox: {
         x: boxX,
         y: boxY,
@@ -837,6 +928,7 @@ function CapturePage() {
     setSourceImage(null);
     setDetections([]);
     setEdgeOverlay(null);
+    setFillOverlay(null);
     setSelectedIndex(null);
     setResult(null);
     setAnalysisError("");
@@ -900,8 +992,8 @@ function CapturePage() {
     }
     setDetections([]);
     setEdgeOverlay(null);
+    setFillOverlay(null);
     setSelectedIndex(null);
-    await new Promise((resolve) => window.setTimeout(resolve, 450));
     let focusBox = null;
     const model = await loadDetector();
     if (model) {
@@ -930,6 +1022,7 @@ function CapturePage() {
       return;
     }
     setEdgeOverlay(edgeResult.overlay);
+    setFillOverlay(edgeResult.fillOverlay);
     setDetections([
       {
         id: "det_0",
@@ -1214,6 +1307,10 @@ function CapturePage() {
           />
         ) : null}
 
+        {captured && fillOverlay && selectedIndex != null ? (
+          <img src={fillOverlay} alt="" className="revive-fill-overlay" />
+        ) : null}
+
         {captured && displayBoxes.length ? (
           <div className="revive-detection-layer">
             {displayBoxes.map((det, index) => {
@@ -1235,9 +1332,7 @@ function CapturePage() {
           </div>
         ) : null}
 
-        {selectedBox ? (
-          <div className="revive-selection-mask" style={selectedBox.style} />
-        ) : null}
+        {selectedBox ? null : null}
 
         {selectedBox && analyzing ? (
           <div
