@@ -228,6 +228,12 @@ export function ReVivePWA({ initialTab = "capture" }) {
   const effectiveDark = themeMode === "system" ? systemDark : themeMode === "dark";
   const themeClass = effectiveDark ? "revive-theme-dark" : "revive-theme-light";
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.classList.add("revive-force-touch");
+    return () => document.documentElement.classList.remove("revive-force-touch");
+  }, []);
+
   const totals = useMemo(() => computeHistoryTotals(historyEntries), [historyEntries]);
 
   const pushToast = useCallback((text) => {
@@ -474,6 +480,8 @@ export function ReVivePWA({ initialTab = "capture" }) {
       theme="ios"
       dark={effectiveDark}
       safeAreas={false}
+      materialTouchRipple
+      iosHoverHighlight
       className={`revive-pwa-root ${themeClass}`}
     >
       <PwaContext.Provider value={contextValue}>
@@ -1626,6 +1634,18 @@ function TextEntryBar({ value, onChange, onSubmit, onClose, disabled, autoFocus 
   );
 }
 
+function PageTitleBar({ title, subtitle }) {
+  return (
+    <div className="revive-titlebar-shell">
+      <Block className="revive-page-header">
+        <div className="revive-page-title">{title}</div>
+        {subtitle ? <div className="revive-page-subtitle">{subtitle}</div> : null}
+      </Block>
+      <div className="revive-titlebar-glass" />
+    </div>
+  );
+}
+
 function ImpactPage() {
   const { historyEntries, totals, signedIn, user, navigateTab, setEntrySheet } = usePwa();
   const entries = Array.isArray(historyEntries) ? historyEntries : [];
@@ -1792,9 +1812,10 @@ function AccountPage() {
 
   return (
     <Page className="revive-route-page revive-account-page" colors={PAGE_COLORS}>
-      <Block className="revive-page-header">
-        <div className="revive-page-title">Account</div>
-      </Block>
+      <PageTitleBar
+        title="Account"
+        subtitle="Sign in, sync your impact, and manage your profile."
+      />
 
       <div className="revive-page-content">
         <Card className="revive-glass-card" contentWrap={false}>
@@ -1901,16 +1922,6 @@ function SettingsPage() {
     signedIn,
   } = usePwa();
   const [locationError, setLocationError] = useState("");
-  const [headerScrolled, setHeaderScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setHeaderScrolled(window.scrollY > 20);
-    };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const requestLocation = useCallback(async () => {
     if (!navigator?.geolocation) {
@@ -1951,9 +1962,10 @@ function SettingsPage() {
 
   return (
     <Page className="revive-route-page revive-settings-page" colors={PAGE_COLORS}>
-      <Block className={`revive-page-header ${headerScrolled ? "is-scrolled" : ""}`}>
-        <div className="revive-page-title">Settings</div>
-      </Block>
+      <PageTitleBar
+        title="Settings"
+        subtitle="Customize location, scanning, and sync preferences."
+      />
 
       <div className="revive-page-content">
         <Card className="revive-glass-card" contentWrap={false}>
@@ -2063,10 +2075,10 @@ function LeaderboardPage() {
 
   return (
     <Page className="revive-route-page revive-leaderboard-page" colors={PAGE_COLORS}>
-      <Block className="revive-page-header">
-        <div className="revive-page-title">Leaderboard</div>
-        <div className="revive-page-subtitle">Top recyclers based on verified daily impact.</div>
-      </Block>
+      <PageTitleBar
+        title="Leaderboard"
+        subtitle="Top recyclers based on verified daily impact."
+      />
 
       <div className="revive-page-content">
         {signedIn ? (
