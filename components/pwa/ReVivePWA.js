@@ -659,7 +659,7 @@ function CapturePage() {
     const crop = focusBox || { x: 0, y: 0, width: image.width, height: image.height };
     if (crop.width <= 1 || crop.height <= 1) return null;
     const maxDim = Math.max(crop.width, crop.height);
-    const targetMax = Math.max(320, Math.min(640, Math.round(maxDim / 1.6)));
+    const targetMax = Math.max(420, Math.min(960, Math.round(maxDim / 1.2)));
     const scale = targetMax / maxDim;
     const width = Math.max(4, Math.round(crop.width * scale));
     const height = Math.max(4, Math.round(crop.height * scale));
@@ -727,12 +727,13 @@ function CapturePage() {
       }
     }
     const dilated = new Uint8Array(width * height);
-    for (let y = 2; y < height - 2; y += 1) {
-      for (let x = 2; x < width - 2; x += 1) {
+    const dilateRadius = Math.max(1, Math.round(Math.min(width, height) / 220));
+    for (let y = dilateRadius; y < height - dilateRadius; y += 1) {
+      for (let x = dilateRadius; x < width - dilateRadius; x += 1) {
         const idx = y * width + x;
         if (!edgeMask[idx]) continue;
-        for (let dy = -2; dy <= 2; dy += 1) {
-          for (let dx = -2; dx <= 2; dx += 1) {
+        for (let dy = -dilateRadius; dy <= dilateRadius; dy += 1) {
+          for (let dx = -dilateRadius; dx <= dilateRadius; dx += 1) {
             dilated[idx + dy * width + dx] = 1;
           }
         }
@@ -793,20 +794,24 @@ function CapturePage() {
       }
     }
     const neighbors = [
-      -width,
-      width,
-      -1,
-      1,
-      -width - 1,
-      -width + 1,
-      width - 1,
-      width + 1,
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1],
     ];
     while (stack.length) {
       const idx = stack.pop();
+      const baseX = idx % width;
+      const baseY = Math.floor(idx / width);
       for (let i = 0; i < neighbors.length; i += 1) {
-        const n = idx + neighbors[i];
-        if (n < 0 || n >= width * height) continue;
+        const nx = baseX + neighbors[i][0];
+        const ny = baseY + neighbors[i][1];
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+        const n = ny * width + nx;
         if (visited[n] || dilated[n]) continue;
         visited[n] = 1;
         stack.push(n);
@@ -867,7 +872,8 @@ function CapturePage() {
     const edgeFullCtx = edgeFull.getContext("2d");
     if (!edgeFullCtx) return null;
     edgeFullCtx.imageSmoothingEnabled = true;
-    edgeFullCtx.globalCompositeOperation = "screen";
+    edgeFullCtx.imageSmoothingQuality = "high";
+    edgeFullCtx.globalCompositeOperation = "source-over";
     edgeFullCtx.drawImage(edgeCanvas, crop.x, crop.y, crop.width, crop.height);
     const fillFull = document.createElement("canvas");
     fillFull.width = image.width;
@@ -875,7 +881,8 @@ function CapturePage() {
     const fillFullCtx = fillFull.getContext("2d");
     if (!fillFullCtx) return null;
     fillFullCtx.imageSmoothingEnabled = true;
-    fillFullCtx.globalCompositeOperation = "screen";
+    fillFullCtx.imageSmoothingQuality = "high";
+    fillFullCtx.globalCompositeOperation = "source-over";
     fillFullCtx.drawImage(fillCanvas, crop.x, crop.y, crop.width, crop.height);
     const overlay = edgeFull.toDataURL("image/png");
     const fillOverlay = fillFull.toDataURL("image/png");
@@ -1325,27 +1332,6 @@ function CapturePage() {
           <img src={fillOverlay} alt="" className="revive-fill-overlay" />
         ) : null}
 
-        {captured && displayBoxes.length ? (
-          <div className="revive-detection-layer">
-            {displayBoxes.map((det, index) => {
-              const isSelected = selectedIndex === index;
-              return (
-                <button
-                  key={det.id}
-                  type="button"
-                  className={`revive-detection-box ${isSelected ? "is-selected" : ""}`}
-                  style={det.style}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedIndex((prev) => (prev === index ? null : index));
-                    setResult(null);
-                  }}
-                />
-              );
-            })}
-          </div>
-        ) : null}
-
         {selectedBox ? null : null}
 
         {selectedBox && analyzing ? (
@@ -1358,142 +1344,148 @@ function CapturePage() {
           />
         ) : null}
 
-        <div className="revive-top-right">
-          <Button
-            className="revive-icon-button"
-            onClick={(event) => {
-              event.stopPropagation();
-              requestLocation();
-              setLocationExpanded((prev) => !prev);
-            }}
-          >
-            <LocationFill className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {captured ? (
-          <div className="revive-top-left">
+        <div className="revive-top-bar" onClick={(event) => event.stopPropagation()}>
+          <Card className="revive-top-glass">
             <Button
               className="revive-icon-button"
               onClick={(event) => {
                 event.stopPropagation();
-                resetCapture();
+                requestLocation();
+                setLocationExpanded((prev) => !prev);
               }}
             >
-              <Xmark className="h-5 w-5" />
+              <LocationFill className="h-5 w-5" />
             </Button>
-          </div>
-        ) : null}
+            <div className="revive-top-title">ReVive</div>
+            {captured ? (
+              <Button
+                className="revive-icon-button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  resetCapture();
+                }}
+              >
+                <Xmark className="h-5 w-5" />
+              </Button>
+            ) : (
+              <div className="revive-top-placeholder" aria-hidden="true" />
+            )}
+          </Card>
+        </div>
 
         {!captured ? (
           <div className="revive-bottom-stack" onClick={(event) => event.stopPropagation()}>
-            {showCaptureInstructions ? (
-              <div className="revive-pill revive-instruction-pill">
-                Tap the shutter to take a photo. Hold it to type an item.
-              </div>
-            ) : null}
-            {shouldShowLocationEntry ? (
-              <ZipEntryRow
-                value={zipCode}
-                onChange={handleZipChange}
-                onLocate={requestLocation}
-                error={locationError}
-              />
-            ) : null}
-            <LayoutGroup id="capture-control">
-              <AnimatePresence initial={false} mode="wait">
-                {isTextEntryActive ? (
-                  <motion.div
-                    key="text-entry"
-                    className="revive-control-panel"
-                    layoutId="capture-control"
-                    layout
-                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                  >
-                    <TextEntryBar
-                      value={manualText}
-                      onChange={setManualText}
-                      onSubmit={submitTextEntry}
-                      onClose={() => setIsTextEntryActive(false)}
-                      disabled={analyzing}
-                      autoFocus
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="shutter"
-                    className="revive-control-panel"
-                    layoutId="capture-control"
-                    layout
-                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                  >
-                    <div className="revive-shutter-row">
-                      <Button
-                        className="revive-icon-button revive-gallery-button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          fileInputRef.current?.click();
-                        }}
-                      >
-                        <PhotoOnRectangle className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        className={`revive-shutter-button ${reduceMotion ? "" : "revive-shutter-pulse"}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (reduceMotion) captureFrame();
-                        }}
-                        onPointerDown={handleShutterPointerDown}
-                        onPointerUp={handleShutterPointerUp}
-                        onPointerLeave={handleShutterPointerCancel}
-                        onPointerCancel={handleShutterPointerCancel}
-                      >
-                        <Arrow3Trianglepath className="revive-shutter-icon" />
-                      </Button>
-                      <div className="revive-shutter-spacer" aria-hidden="true" />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </LayoutGroup>
+            <Card className="revive-bottom-glass">
+              {showCaptureInstructions ? (
+                <div className="revive-pill revive-instruction-pill">
+                  Tap the shutter to take a photo. Hold it to type an item.
+                </div>
+              ) : null}
+              {shouldShowLocationEntry ? (
+                <ZipEntryRow
+                  value={zipCode}
+                  onChange={handleZipChange}
+                  onLocate={requestLocation}
+                  error={locationError}
+                />
+              ) : null}
+              <LayoutGroup id="capture-control">
+                <AnimatePresence initial={false} mode="wait">
+                  {isTextEntryActive ? (
+                    <motion.div
+                      key="text-entry"
+                      className="revive-control-panel"
+                      layoutId="capture-control"
+                      layout
+                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                    >
+                      <TextEntryBar
+                        value={manualText}
+                        onChange={setManualText}
+                        onSubmit={submitTextEntry}
+                        onClose={() => setIsTextEntryActive(false)}
+                        disabled={analyzing}
+                        autoFocus
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="shutter"
+                      className="revive-control-panel"
+                      layoutId="capture-control"
+                      layout
+                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                    >
+                      <div className="revive-shutter-row">
+                        <Button
+                          className="revive-icon-button revive-gallery-button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            fileInputRef.current?.click();
+                          }}
+                        >
+                          <PhotoOnRectangle className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          className={`revive-shutter-button ${reduceMotion ? "" : "revive-shutter-pulse"}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (reduceMotion) captureFrame();
+                          }}
+                          onPointerDown={handleShutterPointerDown}
+                          onPointerUp={handleShutterPointerUp}
+                          onPointerLeave={handleShutterPointerCancel}
+                          onPointerCancel={handleShutterPointerCancel}
+                        >
+                          <Arrow3Trianglepath className="revive-shutter-icon" />
+                        </Button>
+                        <div className="revive-shutter-spacer" aria-hidden="true" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </LayoutGroup>
+            </Card>
           </div>
         ) : (
           <div className="revive-bottom-stack" onClick={(event) => event.stopPropagation()}>
-            {selectedIndex == null && detections.length ? (
-              <div className="revive-pill revive-hint-pill">Tap the item to select it</div>
-            ) : null}
-            {shouldShowLocationEntry ? (
-              <ZipEntryRow
-                value={zipCode}
-                onChange={handleZipChange}
-                onLocate={requestLocation}
-                error={locationError}
-              />
-            ) : null}
-            <Button
-              className={`revive-analyze-button ${analyzeEnabled ? "is-enabled" : "is-disabled"}`}
-              disabled={!analyzeEnabled}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (!analyzeEnabled) return;
-                analyzeSelection();
-              }}
-            >
-              <Sparkles className="revive-analyze-icon" />
-              <span
-                className={
-                  analyzeEnabled ? "revive-analyze-text" : "revive-analyze-text-disabled"
-                }
+            <Card className="revive-bottom-glass revive-bottom-glass-compact">
+              {selectedIndex == null && detections.length ? (
+                <div className="revive-pill revive-hint-pill">Tap the item to select it</div>
+              ) : null}
+              {shouldShowLocationEntry ? (
+                <ZipEntryRow
+                  value={zipCode}
+                  onChange={handleZipChange}
+                  onLocate={requestLocation}
+                  error={locationError}
+                />
+              ) : null}
+              <Button
+                className={`revive-analyze-button ${analyzeEnabled ? "is-enabled" : "is-disabled"}`}
+                disabled={!analyzeEnabled}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (!analyzeEnabled) return;
+                  analyzeSelection();
+                }}
               >
-                Analyze selection
-              </span>
-            </Button>
+                <Sparkles className="revive-analyze-icon" />
+                <span
+                  className={
+                    analyzeEnabled ? "revive-analyze-text" : "revive-analyze-text-disabled"
+                  }
+                >
+                  Analyze selection
+                </span>
+              </Button>
+            </Card>
           </div>
         )}
 
