@@ -867,7 +867,7 @@ function CapturePage() {
     const edgeFullCtx = edgeFull.getContext("2d");
     if (!edgeFullCtx) return null;
     edgeFullCtx.imageSmoothingEnabled = true;
-    edgeFullCtx.globalCompositeOperation = "screen";
+    edgeFullCtx.globalCompositeOperation = "source-over";
     edgeFullCtx.drawImage(edgeCanvas, crop.x, crop.y, crop.width, crop.height);
     const fillFull = document.createElement("canvas");
     fillFull.width = image.width;
@@ -875,7 +875,7 @@ function CapturePage() {
     const fillFullCtx = fillFull.getContext("2d");
     if (!fillFullCtx) return null;
     fillFullCtx.imageSmoothingEnabled = true;
-    fillFullCtx.globalCompositeOperation = "screen";
+    fillFullCtx.globalCompositeOperation = "source-over";
     fillFullCtx.drawImage(fillCanvas, crop.x, crop.y, crop.width, crop.height);
     const overlay = edgeFull.toDataURL("image/png");
     const fillOverlay = fillFull.toDataURL("image/png");
@@ -1323,27 +1323,6 @@ function CapturePage() {
 
         {captured && fillOverlay && selectedIndex != null ? (
           <img src={fillOverlay} alt="" className="revive-fill-overlay" />
-        ) : null}
-
-        {captured && displayBoxes.length ? (
-          <div className="revive-detection-layer">
-            {displayBoxes.map((det, index) => {
-              const isSelected = selectedIndex === index;
-              return (
-                <button
-                  key={det.id}
-                  type="button"
-                  className={`revive-detection-box ${isSelected ? "is-selected" : ""}`}
-                  style={det.style}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedIndex((prev) => (prev === index ? null : index));
-                    setResult(null);
-                  }}
-                />
-              );
-            })}
-          </div>
         ) : null}
 
         {selectedBox ? null : null}
