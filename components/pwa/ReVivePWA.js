@@ -656,7 +656,7 @@ function CapturePage() {
 
   const computeEdgeOverlay = useCallback((image, focusBox) => {
     const base = Math.min(image.width, image.height);
-    const size = Math.max(128, Math.min(256, Math.round(base / 3)));
+    const size = Math.max(320, Math.min(640, Math.round(base / 1.6)));
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
@@ -821,10 +821,10 @@ function CapturePage() {
           if (x > fillMaxX) fillMaxX = x;
           if (y > fillMaxY) fillMaxY = y;
           const p = idx * 4;
-          fillData.data[p] = 145;
-          fillData.data[p + 1] = 95;
-          fillData.data[p + 2] = 255;
-          fillData.data[p + 3] = 120;
+          fillData.data[p] = 128;
+          fillData.data[p + 1] = 252;
+          fillData.data[p + 2] = 220;
+          fillData.data[p + 3] = 132;
         }
       }
     }
@@ -860,6 +860,7 @@ function CapturePage() {
     const edgeFullCtx = edgeFull.getContext("2d");
     if (!edgeFullCtx) return null;
     edgeFullCtx.imageSmoothingEnabled = true;
+    edgeFullCtx.globalCompositeOperation = "screen";
     edgeFullCtx.drawImage(edgeCanvas, crop.x, crop.y, crop.width, crop.height);
     const fillFull = document.createElement("canvas");
     fillFull.width = image.width;
@@ -867,6 +868,7 @@ function CapturePage() {
     const fillFullCtx = fillFull.getContext("2d");
     if (!fillFullCtx) return null;
     fillFullCtx.imageSmoothingEnabled = true;
+    fillFullCtx.globalCompositeOperation = "screen";
     fillFullCtx.drawImage(fillCanvas, crop.x, crop.y, crop.width, crop.height);
     const overlay = edgeFull.toDataURL("image/png");
     const fillOverlay = fillFull.toDataURL("image/png");
@@ -1077,7 +1079,7 @@ function CapturePage() {
         return x >= left && x <= left + width && y >= top && y <= top + height;
       });
       if (hitIndex >= 0) {
-        setSelectedIndex(hitIndex);
+        setSelectedIndex((prev) => (prev === hitIndex ? null : hitIndex));
         setResult(null);
       }
     },
@@ -1323,7 +1325,7 @@ function CapturePage() {
                   style={det.style}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedIndex(index);
+                    setSelectedIndex((prev) => (prev === index ? null : index));
                     setResult(null);
                   }}
                 />
@@ -1908,6 +1910,16 @@ function SettingsPage() {
     signedIn,
   } = usePwa();
   const [locationError, setLocationError] = useState("");
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHeaderScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const requestLocation = useCallback(async () => {
     if (!navigator?.geolocation) {
@@ -1948,7 +1960,7 @@ function SettingsPage() {
 
   return (
     <Page className="revive-route-page revive-settings-page" colors={PAGE_COLORS}>
-      <Block className="revive-page-header">
+      <Block className={`revive-page-header ${headerScrolled ? "is-scrolled" : ""}`}>
         <div className="revive-page-title">Settings</div>
       </Block>
 
@@ -1972,8 +1984,8 @@ function SettingsPage() {
           </div>
           {locationError ? <div className="revive-card-note">{locationError}</div> : null}
           <div className="revive-settings-toggle">
-            <Toggle checked={allowWebSearch} onChange={(event) => setAllowWebSearch(event.target.checked)} />
             <span>Allow web search for local rules</span>
+            <Toggle checked={allowWebSearch} onChange={(event) => setAllowWebSearch(event.target.checked)} />
           </div>
         </Card>
 
@@ -1995,27 +2007,27 @@ function SettingsPage() {
         <Card className="revive-glass-card" contentWrap={false}>
           <div className="revive-card-title">Capture</div>
           <div className="revive-settings-toggle">
-            <Toggle checked={enableHaptics} onChange={(event) => setEnableHaptics(event.target.checked)} />
             <span>Haptic feedback</span>
+            <Toggle checked={enableHaptics} onChange={(event) => setEnableHaptics(event.target.checked)} />
           </div>
           <div className="revive-settings-toggle">
+            <span>Show capture instructions</span>
             <Toggle
               checked={showCaptureInstructions}
               onChange={(event) => setShowCaptureInstructions(event.target.checked)}
             />
-            <span>Show capture instructions</span>
           </div>
           <div className="revive-settings-toggle">
-            <Toggle checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} />
             <span>Reduce motion</span>
+            <Toggle checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} />
           </div>
         </Card>
 
         <Card className="revive-glass-card" contentWrap={false}>
           <div className="revive-card-title">Sync</div>
           <div className="revive-settings-toggle">
-            <Toggle checked={autoSyncImpact} onChange={(event) => setAutoSyncImpact(event.target.checked)} />
             <span>Auto-sync impact</span>
+            <Toggle checked={autoSyncImpact} onChange={(event) => setAutoSyncImpact(event.target.checked)} />
           </div>
           {!signedIn ? (
             <div className="revive-card-note">Auto-sync requires a signed-in account.</div>
