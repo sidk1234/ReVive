@@ -655,14 +655,19 @@ function CapturePage() {
   }, []);
 
   const computeEdgeOverlay = useCallback((image, focusBox) => {
-    const base = Math.min(image.width, image.height);
-    const size = Math.max(320, Math.min(640, Math.round(base / 1.6)));
+    if (!image?.width || !image?.height) return null;
+    const crop = focusBox || { x: 0, y: 0, width: image.width, height: image.height };
+    if (crop.width <= 1 || crop.height <= 1) return null;
+    const maxDim = Math.max(crop.width, crop.height);
+    const targetMax = Math.max(320, Math.min(640, Math.round(maxDim / 1.6)));
+    const scale = targetMax / maxDim;
+    const width = Math.max(4, Math.round(crop.width * scale));
+    const height = Math.max(4, Math.round(crop.height * scale));
     const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return null;
-    const crop = focusBox || { x: 0, y: 0, width: image.width, height: image.height };
     ctx.drawImage(
       image,
       crop.x,
@@ -671,38 +676,38 @@ function CapturePage() {
       crop.height,
       0,
       0,
-      size,
-      size
+      width,
+      height
     );
-    const { data } = ctx.getImageData(0, 0, size, size);
-    const gray = new Float32Array(size * size);
+    const { data } = ctx.getImageData(0, 0, width, height);
+    const gray = new Float32Array(width * height);
     for (let i = 0, p = 0; i < gray.length; i += 1, p += 4) {
       const r = data[p];
       const g = data[p + 1];
       const b = data[p + 2];
       gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
     }
-    const edges = new Float32Array(size * size);
+    const edges = new Float32Array(width * height);
     let sum = 0;
     let sumSq = 0;
     let count = 0;
-    for (let y = 1; y < size - 1; y += 1) {
-      for (let x = 1; x < size - 1; x += 1) {
-        const idx = y * size + x;
+    for (let y = 1; y < height - 1; y += 1) {
+      for (let x = 1; x < width - 1; x += 1) {
+        const idx = y * width + x;
         const gx =
-          -gray[idx - size - 1] -
+          -gray[idx - width - 1] -
           2 * gray[idx - 1] -
-          gray[idx + size - 1] +
-          gray[idx - size + 1] +
+          gray[idx + width - 1] +
+          gray[idx - width + 1] +
           2 * gray[idx + 1] +
-          gray[idx + size + 1];
+          gray[idx + width + 1];
         const gy =
-          gray[idx - size - 1] +
-          2 * gray[idx - size] +
-          gray[idx - size + 1] -
-          gray[idx + size - 1] -
-          2 * gray[idx + size] -
-          gray[idx + size + 1];
+          gray[idx - width - 1] +
+          2 * gray[idx - width] +
+          gray[idx - width + 1] -
+          gray[idx + width - 1] -
+          2 * gray[idx + width] -
+          gray[idx + width + 1];
         const mag = Math.sqrt(gx * gx + gy * gy);
         edges[idx] = mag;
         sum += mag;
@@ -714,34 +719,36 @@ function CapturePage() {
     const variance = Math.max(0, sumSq / Math.max(count, 1) - mean * mean);
     const std = Math.sqrt(variance);
     const threshold = Math.max(mean + std * 1.25, 18);
-    const edgeMask = new Uint8Array(size * size);
-    for (let y = 1; y < size - 1; y += 1) {
-      for (let x = 1; x < size - 1; x += 1) {
-        const idx = y * size + x;
+    const edgeMask = new Uint8Array(width * height);
+    for (let y = 1; y < height - 1; y += 1) {
+      for (let x = 1; x < width - 1; x += 1) {
+        const idx = y * width + x;
         if (edges[idx] > threshold) edgeMask[idx] = 1;
       }
     }
-    const dilated = new Uint8Array(size * size);
-    for (let y = 2; y < size - 2; y += 1) {
-      for (let x = 2; x < size - 2; x += 1) {
-        const idx = y * size + x;
+    const dilated = new Uint8Array(width * height);
+    for (let y = 2; y < height - 2; y += 1) {
+      for (let x = 2; x < width - 2; x += 1) {
+        const idx = y * width + x;
         if (!edgeMask[idx]) continue;
         for (let dy = -2; dy <= 2; dy += 1) {
           for (let dx = -2; dx <= 2; dx += 1) {
-            dilated[idx + dy * size + dx] = 1;
+            dilated[idx + dy * width + dx] = 1;
           }
         }
       }
     }
-    let minX = size;
-    let minY = size;
+    let minX = width;
+    let minY = height;
     let maxX = 0;
     let maxY = 0;
     let edgeCount = 0;
-    const edgeData = ctx.createImageData(size, size);
-    for (let y = 1; y < size - 1; y += 1) {
-      for (let x = 1; x < size - 1; x += 1) {
-        const idx = y * size + x;
+    const edgeData = ctx.createImageData(width, height);
+    const edgeColor = { r: 84, g: 232, b: 190, a: 230 };
+    const fillColor = { r: 122, g: 242, b: 198, a: 110 };
+    for (let y = 1; y < height - 1; y += 1) {
+      for (let x = 1; x < width - 1; x += 1) {
+        const idx = y * width + x;
         if (dilated[idx]) {
           edgeCount += 1;
           if (x < minX) minX = x;
@@ -749,21 +756,21 @@ function CapturePage() {
           if (x > maxX) maxX = x;
           if (y > maxY) maxY = y;
           const p = idx * 4;
-          edgeData.data[p] = 120;
-          edgeData.data[p + 1] = 200;
-          edgeData.data[p + 2] = 255;
-          edgeData.data[p + 3] = 255;
+          edgeData.data[p] = edgeColor.r;
+          edgeData.data[p + 1] = edgeColor.g;
+          edgeData.data[p + 2] = edgeColor.b;
+          edgeData.data[p + 3] = edgeColor.a;
         }
       }
     }
-    if (edgeCount < size * size * 0.002) {
+    if (edgeCount < width * height * 0.002) {
       return null;
     }
-    const visited = new Uint8Array(size * size);
+    const visited = new Uint8Array(width * height);
     const stack = [];
-    for (let x = 0; x < size; x += 1) {
+    for (let x = 0; x < width; x += 1) {
       const topIdx = x;
-      const bottomIdx = (size - 1) * size + x;
+      const bottomIdx = (height - 1) * width + x;
       if (!dilated[topIdx]) {
         visited[topIdx] = 1;
         stack.push(topIdx);
@@ -773,9 +780,9 @@ function CapturePage() {
         stack.push(bottomIdx);
       }
     }
-    for (let y = 0; y < size; y += 1) {
-      const leftIdx = y * size;
-      const rightIdx = y * size + (size - 1);
+    for (let y = 0; y < height; y += 1) {
+      const leftIdx = y * width;
+      const rightIdx = y * width + (width - 1);
       if (!dilated[leftIdx]) {
         visited[leftIdx] = 1;
         stack.push(leftIdx);
@@ -786,34 +793,34 @@ function CapturePage() {
       }
     }
     const neighbors = [
-      -size,
-      size,
+      -width,
+      width,
       -1,
       1,
-      -size - 1,
-      -size + 1,
-      size - 1,
-      size + 1,
+      -width - 1,
+      -width + 1,
+      width - 1,
+      width + 1,
     ];
     while (stack.length) {
       const idx = stack.pop();
       for (let i = 0; i < neighbors.length; i += 1) {
         const n = idx + neighbors[i];
-        if (n < 0 || n >= size * size) continue;
+        if (n < 0 || n >= width * height) continue;
         if (visited[n] || dilated[n]) continue;
         visited[n] = 1;
         stack.push(n);
       }
     }
-    const fillData = ctx.createImageData(size, size);
+    const fillData = ctx.createImageData(width, height);
     let fillCount = 0;
-    let fillMinX = size;
-    let fillMinY = size;
+    let fillMinX = width;
+    let fillMinY = height;
     let fillMaxX = 0;
     let fillMaxY = 0;
-    for (let y = 1; y < size - 1; y += 1) {
-      for (let x = 1; x < size - 1; x += 1) {
-        const idx = y * size + x;
+    for (let y = 1; y < height - 1; y += 1) {
+      for (let x = 1; x < width - 1; x += 1) {
+        const idx = y * width + x;
         if (!dilated[idx] && !visited[idx]) {
           fillCount += 1;
           if (x < fillMinX) fillMinX = x;
@@ -821,36 +828,36 @@ function CapturePage() {
           if (x > fillMaxX) fillMaxX = x;
           if (y > fillMaxY) fillMaxY = y;
           const p = idx * 4;
-          fillData.data[p] = 128;
-          fillData.data[p + 1] = 252;
-          fillData.data[p + 2] = 220;
-          fillData.data[p + 3] = 132;
+          fillData.data[p] = fillColor.r;
+          fillData.data[p + 1] = fillColor.g;
+          fillData.data[p + 2] = fillColor.b;
+          fillData.data[p + 3] = fillColor.a;
         }
       }
     }
-    if (fillCount < size * size * 0.002) {
+    if (fillCount < width * height * 0.002) {
       fillMinX = minX;
       fillMinY = minY;
       fillMaxX = maxX;
       fillMaxY = maxY;
     }
-    for (let y = 0; y < size; y += 1) {
-      for (let x = 0; x < size; x += 1) {
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
         if (x < minX || x > maxX || y < minY || y > maxY) {
-          const idx = (y * size + x) * 4;
+          const idx = (y * width + x) * 4;
           edgeData.data[idx + 3] = 0;
         }
       }
     }
     const edgeCanvas = document.createElement("canvas");
-    edgeCanvas.width = size;
-    edgeCanvas.height = size;
+    edgeCanvas.width = width;
+    edgeCanvas.height = height;
     const edgeCtx = edgeCanvas.getContext("2d");
     if (!edgeCtx) return null;
     edgeCtx.putImageData(edgeData, 0, 0);
     const fillCanvas = document.createElement("canvas");
-    fillCanvas.width = size;
-    fillCanvas.height = size;
+    fillCanvas.width = width;
+    fillCanvas.height = height;
     const fillCtx = fillCanvas.getContext("2d");
     if (!fillCtx) return null;
     fillCtx.putImageData(fillData, 0, 0);
@@ -872,8 +879,8 @@ function CapturePage() {
     fillFullCtx.drawImage(fillCanvas, crop.x, crop.y, crop.width, crop.height);
     const overlay = edgeFull.toDataURL("image/png");
     const fillOverlay = fillFull.toDataURL("image/png");
-    const scaleX = crop.width / size;
-    const scaleY = crop.height / size;
+    const scaleX = crop.width / width;
+    const scaleY = crop.height / height;
     let boxX = crop.x + fillMinX * scaleX;
     let boxY = crop.y + fillMinY * scaleY;
     let boxW = (fillMaxX - fillMinX) * scaleX;
@@ -1081,9 +1088,14 @@ function CapturePage() {
       if (hitIndex >= 0) {
         setSelectedIndex((prev) => (prev === hitIndex ? null : hitIndex));
         setResult(null);
+        return;
+      }
+      if (selectedIndex != null) {
+        setSelectedIndex(null);
+        setResult(null);
       }
     },
-    [displayBoxes]
+    [displayBoxes, selectedIndex]
   );
 
   const createSelectionCrop = useCallback(async () => {
